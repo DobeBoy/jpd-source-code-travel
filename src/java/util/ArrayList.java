@@ -121,7 +121,7 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Shared empty array instance used for default sized empty instances. We
      * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
-     * first element is added.
+     * first element is added.初始化的一个空数组，当用无参构造函数的时候，底层数组用的就是他
      */
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 
@@ -159,9 +159,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Constructs an empty list with an initial capacity of ten.
-     * 构造一个初始化容量为10的空列表。当我们new ArrayList没有指定初始化容量大小的时候会用这个构造方法。
-     * sdfasdf
+     * Constructs an empty list with an initial capacity of ten.构造一个初始化容量为10的空列表。当我们new ArrayList没有指定初始化容量大小的时候会用这个构造方法。
      */
     public ArrayList() {
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
@@ -176,14 +174,14 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public ArrayList(Collection<? extends E> c) {
-        elementData = c.toArray();
+        elementData = c.toArray();//将参数转换为一个数组，赋值给elementData
         if ((size = elementData.length) != 0) {
             // c.toArray might (incorrectly) not return Object[] (see 6260652)
             if (elementData.getClass() != Object[].class)
-                elementData = Arrays.copyOf(elementData, size, Object[].class);
+                elementData = Arrays.copyOf(elementData, size, Object[].class);//如果elementData不是Object类型的数组，就转换为Object类型数组
         } else {
             // replace with empty array.
-            this.elementData = EMPTY_ELEMENTDATA;
+            this.elementData = EMPTY_ELEMENTDATA;//如果大小是0，就将提前创建好的EMPTY_ELEMENTDATA数组赋值给elementData
         }
     }
 

@@ -4,15 +4,16 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        ArrayList<Integer> list = new ArrayList<>();
+        ArrayList<Integer> oneList = new ArrayList<>();
+        ArrayList<Integer> twoList = new ArrayList<>(oneList);
         for (int i = 0; i < 100; i++) {
-            list.add(i);
+            twoList.add(i);
         }
         for (int i = 0; i < 100; i++) {
-            list.get(i);
+            twoList.get(i);
         }
         for (int i = 0; i < 100; i++) {
-            list.remove(i);
+            twoList.remove(i);
         }
     }
 }
