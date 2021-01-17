@@ -219,20 +219,20 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
-    private void ensureCapacityInternal(int minCapacity) {
-        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+    private void ensureCapacityInternal(int minCapacity) {//minCapacity 需要的最小容量，也就是数组所需要的最小大小
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {//如果数组是原始的空数组，就将数组所需最小大小设置为10，（DEFAULT_CAPACITY == 10）。这也就是ArrayList默认大小是10的代码。
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
 
-        ensureExplicitCapacity(minCapacity);
+        ensureExplicitCapacity(minCapacity);//扩容方法
     }
 
-    private void ensureExplicitCapacity(int minCapacity) {
-        modCount++;
+    private void ensureExplicitCapacity(int minCapacity) {//minCapacity数组所需的最小大小
+        modCount++;//记录ArrayList结构改变
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0)
-            grow(minCapacity);
+        if (minCapacity - elementData.length > 0)//如果数组所需最小大小 > 现在数组的大小
+            grow(minCapacity);//扩容
     }
 
     /**
@@ -251,14 +251,14 @@ public class ArrayList<E> extends AbstractList<E>
      */
     private void grow(int minCapacity) {
         // overflow-conscious code
-        int oldCapacity = elementData.length;
-        int newCapacity = oldCapacity + (oldCapacity >> 1);
-        if (newCapacity - minCapacity < 0)
-            newCapacity = minCapacity;
-        if (newCapacity - MAX_ARRAY_SIZE > 0)
-            newCapacity = hugeCapacity(minCapacity);
+        int oldCapacity = elementData.length;//原数组大小
+        int newCapacity = oldCapacity + (oldCapacity >> 1);//原大小 + 原大小右移一位大小
+        if (newCapacity - minCapacity < 0)//如果按照上面规则扩容后，扩容后大小还是小于数组所需最小大小
+            newCapacity = minCapacity;//将扩容后大小设置为数组所需最小大小；比如new ArrayList(1),然后往里面添加元素就会出现按上面规则扩容后，扩容后的大小还是小于数组所需最小大小；因为1 >>1 结果是0，那么newCapacity = oldCapacity + (oldCapacity >> 1)也就是等于1
+        if (newCapacity - MAX_ARRAY_SIZE > 0)//防止Integer溢出
+            newCapacity = hugeCapacity(minCapacity);//当Integer溢出的时候，数组的大小为int的最大值，或者最大值-8
         // minCapacity is usually close to size, so this is a win:
-        elementData = Arrays.copyOf(elementData, newCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);//拷贝元素
     }
 
     private static int hugeCapacity(int minCapacity) {
@@ -415,7 +415,7 @@ public class ArrayList<E> extends AbstractList<E>
 
     @SuppressWarnings("unchecked")
     E elementData(int index) {
-        return (E) elementData[index];
+        return (E) elementData[index];//直接通过下标获取元素
     }
 
     /**
@@ -426,9 +426,9 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
-        rangeCheck(index);
+        rangeCheck(index);//检查是否数组下标越界
 
-        return elementData(index);
+        return elementData(index);//直接通过下标获取数组元素
     }
 
     /**
@@ -489,18 +489,18 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E remove(int index) {
-        rangeCheck(index);
+        rangeCheck(index);//检查数组下标越界
 
-        modCount++;
-        E oldValue = elementData(index);
+        modCount++;//记录集合结构改变
+        E oldValue = elementData(index);//直接通过下标获取元素
 
-        int numMoved = size - index - 1;
-        if (numMoved > 0)
+        int numMoved = size - index - 1;//被删除元素后面剩余元素的数量
+        if (numMoved > 0)//如果被删除元素后面还有元素，将被删除元素前面的元素，和被删除元素后面的元素拼接起来，底层调用的是本地方法C方法
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
-        elementData[--size] = null; // clear to let GC do its work
+        elementData[--size] = null; //如果被删除元素后面没有元素，也就是被删除的是最后一个元素，直接将最后一个元素设置为null
 
-        return oldValue;
+        return oldValue;//返回被删除的元素
     }
 
     /**
@@ -650,7 +650,7 @@ public class ArrayList<E> extends AbstractList<E>
      */
     private void rangeCheck(int index) {
         if (index >= size)
-            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));//数组下标越界抛出的异常
     }
 
     /**
@@ -843,32 +843,32 @@ public class ArrayList<E> extends AbstractList<E>
         int expectedModCount = modCount;
 
         public boolean hasNext() {
-            return cursor != size;
+            return cursor != size;//cursor就是记录next获取的元素个数，每次调用next()，cursor都+1；size就是集合元素数量
         }
 
         @SuppressWarnings("unchecked")
         public E next() {
-            checkForComodification();
-            int i = cursor;
-            if (i >= size)
+            checkForComodification();//检查是否发生并发修改异常
+            int i = cursor;//记录next获取的元素个数，每次调用next()，cursor都+1；就是下面的cursor = i + 1;
+            if (i >= size)//如果获取next的元素个数已经大于ArrayList集合元素数量，抛出异常
                 throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
+            Object[] elementData = ArrayList.this.elementData;//获取ArrayList底层存储元素的那个数组
+            if (i >= elementData.length)//如果用next获取元素的个数已经大于底层数组的大小，抛出并发修改异常；用iterator迭代器遍历集合的时候，是不允许改变集合结构的，只有当iterator遍历集合的过程中，改变了集合的结构i >= elementData.length才有可能为真，所以为真的时候会抛出并发修改这个异常。
                 throw new ConcurrentModificationException();
             cursor = i + 1;
-            return (E) elementData[lastRet = i];
+            return (E) elementData[lastRet = i];//返回next()获取到的元素，并且将lastRet设置为这个元素的下标，是为了调用remove方法的时候用
         }
 
         public void remove() {
-            if (lastRet < 0)
+            if (lastRet < 0)//lastRet在调用next方法的时候被赋值，赋值为next方法获取的元素的下标，这也是为什么在迭代器中调用remove方法之前必须调用next方法，否则会抛出异常IllegalStateException
                 throw new IllegalStateException();
-            checkForComodification();
+            checkForComodification();//检查是否发生并发修改异常
 
             try {
-                ArrayList.this.remove(lastRet);
-                cursor = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
+                ArrayList.this.remove(lastRet);//调用ArrayList的remove()方法，这时候ArrayList的modCount会发生改变，所以下面会给Iterator的expectedModCount重新赋值
+                cursor = lastRet;//cursor记录next获取的元素个数；lastRet是上次调用next方法获取的元素的下标；（这儿我的理解是相当于cursor = cursor - 1，因为删除了一个元素，那么记录获取元素的个数就应该减一，要不然再次用next方法获取元素的时候，cursor就可能比size大）
+                lastRet = -1;//lastRet重新设置为-1，也就是下次再用iterator调用remove方法之前，必须还得再调用iterator的next方法，否则lastRet < 0还是会抛出异常
+                expectedModCount = modCount;//删除元素后，modCount改变，所以给expectedModCount重新赋值
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
             }
@@ -897,7 +897,7 @@ public class ArrayList<E> extends AbstractList<E>
         }
 
         final void checkForComodification() {
-            if (modCount != expectedModCount)
+            if (modCount != expectedModCount)//modCount是ArrayList记录机构发生改变的次数；expectedModCount是iterator迭代器记录ArrayList结构发生改变的次数，如果两个不一样，说明在使用迭代器的过程中，直接使用ArrayList的方法改变了ArrayList的结构；抛出异常
                 throw new ConcurrentModificationException();
         }
     }
