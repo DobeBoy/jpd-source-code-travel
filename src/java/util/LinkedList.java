@@ -84,21 +84,21 @@ public class LinkedList<E>
     extends AbstractSequentialList<E>
     implements List<E>, Deque<E>, Cloneable, java.io.Serializable
 {
-    transient int size = 0;
+    transient int size = 0;//元素个数
 
     /**
      * Pointer to first node.
      * Invariant: (first == null && last == null) ||
      *            (first.prev == null && first.item != null)
      */
-    transient Node<E> first;
+    transient Node<E> first;//首节点
 
     /**
      * Pointer to last node.
      * Invariant: (first == null && last == null) ||
      *            (last.next == null && last.item != null)
      */
-    transient Node<E> last;
+    transient Node<E> last;//尾节点
 
     /**
      * Constructs an empty list.
@@ -384,7 +384,7 @@ public class LinkedList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public boolean addAll(Collection<? extends E> c) {
-        return addAll(size, c);
+        return addAll(size, c);//size是要插入元素的位置
     }
 
     /**
@@ -402,43 +402,43 @@ public class LinkedList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
      */
-    public boolean addAll(int index, Collection<? extends E> c) {
-        checkPositionIndex(index);
+    public boolean addAll(int index, Collection<? extends E> c) {//index就是开始要插入节点的位置
+        checkPositionIndex(index);//检查是否越界
 
-        Object[] a = c.toArray();
+        Object[] a = c.toArray();//将要插入的集合C转换为数组
         int numNew = a.length;
-        if (numNew == 0)
+        if (numNew == 0)//如果要插入的集合的插入为0，直接返回
             return false;
-
+        //index下标处节点的前置节点和后置节点（记住index就是开始要追加元素的下标）
         Node<E> pred, succ;
-        if (index == size) {
-            succ = null;
-            pred = last;
-        } else {
-            succ = node(index);
-            pred = succ.prev;
+        if (index == size) {//如果要插入节点的下标就是size，直接在链表尾部追加节点
+            succ = null;//index下标处的节点的后置节点为null
+            pred = last;//index下标处的节点的前置节点是原链表的尾节点
+        } else {//如果要插入节点的下标不是size，也就是不是在链表尾部插入。也就是不是这种情况LinkedList<Integer> list1 = new LinkedList<>();LinkedList<Integer> list2 = new LinkedList<Integer>(list1);
+            succ = node(index);//获取index下标处的节点
+            pred = succ.prev;//index下标处节点的前置节点设置为pred
         }
 
-        for (Object o : a) {
-            @SuppressWarnings("unchecked") E e = (E) o;
-            Node<E> newNode = new Node<>(pred, e, null);
-            if (pred == null)
-                first = newNode;
+        for (Object o : a) {//遍历要插入的数组元素
+            @SuppressWarnings("unchecked") E e = (E) o;//将元素强转为集合泛型类型的（E就是集合的泛型类型）
+            Node<E> newNode = new Node<>(pred, e, null);//将所有的要插入的元素都转变为节点，前置节点为pred，值为e
+            if (pred == null)//如果index处的节点的前置节点是空，说明index处的节点就是头节点
+                first = newNode;//设置为头节点
             else
-                pred.next = newNode;
-            pred = newNode;
+                pred.next = newNode;//如果index处的节点的前置节点不为空，将index前置节点的下一个节点设置为index处的节点（也就是和原集合的节点链表连接起来）
+            pred = newNode;//新节点插入完成后，新节点就变成要插入节点的前置节点；这一步是将新节点设置为要插入节点的前置节点
+        }
+        //遍历结束，开始设置尾节点
+        if (succ == null) {//如果index下标处的节点的后置节点是空，说明是直接从原集合节点链表的尾部插入的
+            last = pred;//直接将尾节点设置为要pred，看上面pred = newNode，a数组遍历完之后，pred就是a数组最后一个元素变成的节点
+        } else {//否是就不是从原集合节点链表的尾部插入的，可能是中间，也可能是头
+            pred.next = succ;//pred就是a数组最后一个元素变成的节点，succ就是index下标处的那个节点，将两个节点连接
+            succ.prev = pred;//双向连接，所以后置节点设置完，还要设置前置节点
         }
 
-        if (succ == null) {
-            last = pred;
-        } else {
-            pred.next = succ;
-            succ.prev = pred;
-        }
-
-        size += numNew;
-        modCount++;
-        return true;
+        size += numNew;//节点插入完成后，新集合的大小
+        modCount++;//modCount是集合结构改变的次数
+        return true;//返回true，插入完成
     }
 
     /**
@@ -561,17 +561,17 @@ public class LinkedList<E>
     }
 
     /**
-     * Returns the (non-null) Node at the specified element index.
+     * Returns the (non-null) Node at the specified element index.返回指定元素处的非空索引
      */
     Node<E> node(int index) {
         // assert isElementIndex(index);
 
-        if (index < (size >> 1)) {
+        if (index < (size >> 1)) {//如果index小于（size 除以 2），那么从首节点开始遍历
             Node<E> x = first;
             for (int i = 0; i < index; i++)
                 x = x.next;
             return x;
-        } else {
+        } else {//否则从尾节点开始遍历
             Node<E> x = last;
             for (int i = size - 1; i > index; i--)
                 x = x.prev;
@@ -969,8 +969,8 @@ public class LinkedList<E>
 
     private static class Node<E> {
         E item;
-        Node<E> next;
-        Node<E> prev;
+        Node<E> next;//上一个节点
+        Node<E> prev;//下一个节点，从这可以知道，linkedList是一个双向链表
 
         Node(Node<E> prev, E element, Node<E> next) {
             this.item = element;
