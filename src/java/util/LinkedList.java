@@ -123,12 +123,12 @@ public class LinkedList<E>
      * Links e as first element.
      */
     private void linkFirst(E e) {
-        final Node<E> f = first;
-        final Node<E> newNode = new Node<>(null, e, f);
-        first = newNode;
-        if (f == null)
+        final Node<E> f = first;//原来集合的头节点
+        final Node<E> newNode = new Node<>(null, e, f);//将插入的值变为一个节点，改节点的next节点是原来结合的头节点（也就是头插，连接头节点）
+        first = newNode;//连接原来集合的头节点之后，新插入的节点就变成了头节点
+        if (f == null)//如果原来集合的头节点为空，说明原来集合是一个空集合，那么插入的这个节点就变成了尾节点
             last = newNode;
-        else
+        else//否则，新插入的节点不是尾节点，那么原来集合头节点是前置节点就是新插入的这个节点
             f.prev = newNode;
         size++;
         modCount++;
@@ -138,15 +138,15 @@ public class LinkedList<E>
      * Links e as last element.
      */
     void linkLast(E e) {
-        final Node<E> l = last;
-        final Node<E> newNode = new Node<>(l, e, null);
-        last = newNode;
-        if (l == null)
+        final Node<E> l = last;//先获取原linkedList集合的尾节点
+        final Node<E> newNode = new Node<>(l, e, null);//new 一个新节点，新节点的前置节点是原集合的尾节点，值是e
+        last = newNode;//将新节点设置为尾节点（从这可以看出，linkedList新增节点是尾插）
+        if (l == null)//l是原linkdList集合的尾节点，如果为空，说明原来集合是一个空集合，那么新节点也就是首节点
             first = newNode;
-        else
+        else//否则，新节点不是首节点，将新节点的前置节点的next指针指向新节点
             l.next = newNode;
-        size++;
-        modCount++;
+        size++;//集合大小++
+        modCount++;//集合结构改变次数++
     }
 
     /**
@@ -171,13 +171,13 @@ public class LinkedList<E>
     private E unlinkFirst(Node<E> f) {
         // assert f == first && f != null;
         final E element = f.item;
-        final Node<E> next = f.next;
+        final Node<E> next = f.next;//原来头节点的next节点
         f.item = null;
         f.next = null; // help GC
-        first = next;
-        if (next == null)
+        first = next;//原来头节点的next节点 现在变为头节点
+        if (next == null)//如果原来头节点的next节点是空，说明这个集合只有一个节点，删除之后就没有了，所以将尾节点设置为空
             last = null;
-        else
+        else//next现在是头节点，所以他的前置节点应该为空
             next.prev = null;
         size--;
         modCount++;
@@ -266,7 +266,7 @@ public class LinkedList<E>
      */
     public E removeFirst() {
         final Node<E> f = first;
-        if (f == null)
+        if (f == null)//如果头节点是空的，说明是一个空集合，抛出异常
             throw new NoSuchElementException();
         return unlinkFirst(f);
     }
@@ -402,7 +402,7 @@ public class LinkedList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
      */
-    public boolean addAll(int index, Collection<? extends E> c) {//index就是开始要插入节点的位置
+    public boolean addAll(int index, Collection<? extends E> c) {//index就是开始要插入节点的位置。（这儿用了组合模式，Collection c 可以是他的所有实现类）
         checkPositionIndex(index);//检查是否越界
 
         Object[] a = c.toArray();//将要插入的集合C转换为数组
@@ -473,8 +473,8 @@ public class LinkedList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E get(int index) {
-        checkElementIndex(index);
-        return node(index).item;
+        checkElementIndex(index);//检查是否下标越界
+        return node(index).item;//获取指定下标的节点值，item是node类中存放值的属性
     }
 
     /**
@@ -563,7 +563,7 @@ public class LinkedList<E>
     /**
      * Returns the (non-null) Node at the specified element index.返回指定元素处的非空索引
      */
-    Node<E> node(int index) {
+    Node<E> node(int index) {//获取指定下标的节点
         // assert isElementIndex(index);
 
         if (index < (size >> 1)) {//如果index小于（size 除以 2），那么从首节点开始遍历
@@ -648,8 +648,8 @@ public class LinkedList<E>
      * @since 1.5
      */
     public E peek() {
-        final Node<E> f = first;
-        return (f == null) ? null : f.item;
+        final Node<E> f = first;//获取头节点
+        return (f == null) ? null : f.item;//获取头节点的值
     }
 
     /**
@@ -669,7 +669,7 @@ public class LinkedList<E>
      * @return the head of this list, or {@code null} if this list is empty
      * @since 1.5
      */
-    public E poll() {
+    public E poll() {//检索并且删除这个列表的头节点。
         final Node<E> f = first;
         return (f == null) ? null : unlinkFirst(f);
     }
@@ -682,7 +682,7 @@ public class LinkedList<E>
      * @since 1.5
      */
     public E remove() {
-        return removeFirst();
+        return removeFirst();//删除头节点
     }
 
     /**
@@ -869,10 +869,10 @@ public class LinkedList<E>
     }
 
     private class ListItr implements ListIterator<E> {
-        private Node<E> lastReturned;
-        private Node<E> next;
-        private int nextIndex;
-        private int expectedModCount = modCount;
+        private Node<E> lastReturned;//调用迭代器的next方法，实际要返回的节点。
+        private Node<E> next;//相当于迭代器调用next方法要输出的节点，比如迭代器第一次调用next方法，那么这个next就是首节点；第二次调用next，那么这个next就是第二个节点，也就是首节点的next节点。调用迭代器的next方法后，这个next会变成下一个节点。next = next.next
+        private int nextIndex;//迭代器调用next方法，返回的节点的下标
+        private int expectedModCount = modCount;//expectedModCount是迭代器记录LinkedList结构改变次数的变量，modCount是LinkedList自己记录自己结构改变次数的变量
 
         ListItr(int index) {
             // assert isPositionIndex(index);
@@ -881,18 +881,18 @@ public class LinkedList<E>
         }
 
         public boolean hasNext() {
-            return nextIndex < size;
+            return nextIndex < size;//nextIndex是用next方法获取到的节点的个数，size是集合里面所有元素的个数
         }
 
         public E next() {
-            checkForComodification();
+            checkForComodification();//检查expectedModCount 和 modCount是否一致
             if (!hasNext())
                 throw new NoSuchElementException();
 
-            lastReturned = next;
-            next = next.next;
-            nextIndex++;
-            return lastReturned.item;
+            lastReturned = next;//lastReturned 是实际要返回的节点
+            next = next.next;//next指向下一个节点
+            nextIndex++;//next下标 + 1
+            return lastReturned.item;//返回节点的值
         }
 
         public boolean hasPrevious() {
@@ -969,8 +969,8 @@ public class LinkedList<E>
 
     private static class Node<E> {
         E item;
-        Node<E> next;//上一个节点
-        Node<E> prev;//下一个节点，从这可以知道，linkedList是一个双向链表
+        Node<E> next;//后置节点
+        Node<E> prev;//前置节点，从这可以知道，linkedList是一个双向链表
 
         Node(Node<E> prev, E element, Node<E> next) {
             this.item = element;

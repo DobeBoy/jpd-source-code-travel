@@ -231,7 +231,7 @@ public class ArrayList<E> extends AbstractList<E>
         modCount++;//记录ArrayList结构改变
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0)//如果数组所需最小大小 > 现在数组的大小
+        if (minCapacity - elementData.length > 0)//如果数组所需最小大小 > 现在数组的大小。jdk6用的是if(minCapacity > elementData.length)这样会出现一个问题，如果minCapacity超过了Integer的最大值，那么minCapacity就会变为一个负数，此时原本应该进入扩容步骤，然后抛出OutOfMemoryError();但是jdk6这样写就不会进入扩容步骤，他会抛出indexOutOfBountsException()。
             grow(minCapacity);//扩容
     }
 
@@ -256,14 +256,14 @@ public class ArrayList<E> extends AbstractList<E>
         if (newCapacity - minCapacity < 0)//如果按照上面规则扩容后，扩容后大小还是小于数组所需最小大小
             newCapacity = minCapacity;//将扩容后大小设置为数组所需最小大小；比如new ArrayList(1),然后往里面添加元素就会出现按上面规则扩容后，扩容后的大小还是小于数组所需最小大小；因为1 >>1 结果是0，那么newCapacity = oldCapacity + (oldCapacity >> 1)也就是等于1
         if (newCapacity - MAX_ARRAY_SIZE > 0)//防止Integer溢出
-            newCapacity = hugeCapacity(minCapacity);//当Integer溢出的时候，数组的大小为int的最大值，或者最大值-8
+            newCapacity = hugeCapacity(minCapacity);//当Integer溢出的时候，数组的大小为int的最大值，或者最大值-8，如果minCapacity < 0,也就是已经大于Integer.MAX,此时会报OutOfMemoryError（）
         // minCapacity is usually close to size, so this is a win:
         elementData = Arrays.copyOf(elementData, newCapacity);//拷贝元素
     }
 
     private static int hugeCapacity(int minCapacity) {
         if (minCapacity < 0) // overflow
-            throw new OutOfMemoryError();
+            throw new OutOfMemoryError();//如果需要的最小容量已经大于Integer的最大值，那么就会报这个异常
         return (minCapacity > MAX_ARRAY_SIZE) ?
             Integer.MAX_VALUE :
             MAX_ARRAY_SIZE;
@@ -573,11 +573,11 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(Collection<? extends E> c) {//用了组合模式，参数只要是Collection的实现类即可
         Object[] a = c.toArray();
         int numNew = a.length;
-        ensureCapacityInternal(size + numNew);  // Increments modCount
-        System.arraycopy(a, 0, elementData, size, numNew);
+        ensureCapacityInternal(size + numNew);  // 判断是否需要扩容，以及扩容方法
+        System.arraycopy(a, 0, elementData, size, numNew);//数组元素拷贝
         size += numNew;
         return numNew != 0;
     }
