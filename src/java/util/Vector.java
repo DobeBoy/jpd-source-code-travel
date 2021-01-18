@@ -93,7 +93,7 @@ public class Vector<E>
      *
      * @serial
      */
-    protected Object[] elementData;
+    protected Object[] elementData;//存放元素的数组
 
     /**
      * The number of valid components in this {@code Vector} object.
@@ -102,7 +102,7 @@ public class Vector<E>
      *
      * @serial
      */
-    protected int elementCount;
+    protected int elementCount;//元素的数量
 
     /**
      * The amount by which the capacity of the vector is automatically
@@ -112,7 +112,7 @@ public class Vector<E>
      *
      * @serial
      */
-    protected int capacityIncrement;
+    protected int capacityIncrement;//增长系数
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
     private static final long serialVersionUID = -2767605614048989439L;
@@ -127,13 +127,13 @@ public class Vector<E>
      * @throws IllegalArgumentException if the specified initial capacity
      *         is negative
      */
-    public Vector(int initialCapacity, int capacityIncrement) {
+    public Vector(int initialCapacity, int capacityIncrement) {//initialCapacity初始化大小，capacityIncrement增长系数
         super();
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal Capacity: "+
                                                initialCapacity);
-        this.elementData = new Object[initialCapacity];
-        this.capacityIncrement = capacityIncrement;
+        this.elementData = new Object[initialCapacity];//创建一个容量为10的数组
+        this.capacityIncrement = capacityIncrement;//增长系数为0
     }
 
     /**
@@ -145,7 +145,7 @@ public class Vector<E>
      *         is negative
      */
     public Vector(int initialCapacity) {
-        this(initialCapacity, 0);
+        this(initialCapacity, 0);//initialCapacity是初始化大小
     }
 
     /**
@@ -256,20 +256,20 @@ public class Vector<E>
 
     private void grow(int minCapacity) {
         // overflow-conscious code
-        int oldCapacity = elementData.length;
+        int oldCapacity = elementData.length;//原数组容量
         int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
-                                         capacityIncrement : oldCapacity);
-        if (newCapacity - minCapacity < 0)
+                                         capacityIncrement : oldCapacity);//如果capacityIncrement（增长系数）不为空，就按两倍增长
+        if (newCapacity - minCapacity < 0)//如果新容量 还是小于最小容量，那么新容量 还是等于最小容量
             newCapacity = minCapacity;
-        if (newCapacity - MAX_ARRAY_SIZE > 0)
+        if (newCapacity - MAX_ARRAY_SIZE > 0)//如果新容量 大于 int的最大大小，也就是int溢出
             newCapacity = hugeCapacity(minCapacity);
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
     private static int hugeCapacity(int minCapacity) {
-        if (minCapacity < 0) // overflow
+        if (minCapacity < 0) // overflow 如果最小容量 < 0，也就是int溢出，就报异常
             throw new OutOfMemoryError();
-        return (minCapacity > MAX_ARRAY_SIZE) ?
+        return (minCapacity > MAX_ARRAY_SIZE) ?//如果最小容量没有int溢出，但是扩容后的容量溢出，那么扩容后的容量就是int的最大值。
             Integer.MAX_VALUE :
             MAX_ARRAY_SIZE;
     }
@@ -743,7 +743,7 @@ public class Vector<E>
      *            ({@code index < 0 || index >= size()})
      * @since 1.2
      */
-    public synchronized E get(int index) {
+    public synchronized E get(int index) {//加了synchronized锁
         if (index >= elementCount)
             throw new ArrayIndexOutOfBoundsException(index);
 
@@ -777,8 +777,8 @@ public class Vector<E>
      * @return {@code true} (as specified by {@link Collection#add})
      * @since 1.2
      */
-    public synchronized boolean add(E e) {
-        modCount++;
+    public synchronized boolean add(E e) {//加了synchronized锁
+        modCount++;//结构改变，+1
         ensureCapacityHelper(elementCount + 1);
         elementData[elementCount++] = e;
         return true;
@@ -826,10 +826,10 @@ public class Vector<E>
      * @since 1.2
      */
     public synchronized E remove(int index) {
-        modCount++;
+        modCount++;//结构改变，+1
         if (index >= elementCount)
             throw new ArrayIndexOutOfBoundsException(index);
-        E oldValue = elementData(index);
+        E oldValue = elementData(index);、、
 
         int numMoved = elementCount - index - 1;
         if (numMoved > 0)
