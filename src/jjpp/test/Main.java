@@ -6,9 +6,9 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        Vector<Integer> vector = new Vector<>();
+        HashMap<Integer, Integer> map = new HashMap<>(10,1);
         for (int i = 0; i < 100; i++) {
-            vector.remove(i);
+            map.put(i,i);
         }
     }
 }

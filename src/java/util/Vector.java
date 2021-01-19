@@ -827,17 +827,17 @@ public class Vector<E>
      */
     public synchronized E remove(int index) {
         modCount++;//结构改变，+1
-        if (index >= elementCount)
+        if (index >= elementCount)//下标大于集合元素数量，数组下标越界
             throw new ArrayIndexOutOfBoundsException(index);
-        E oldValue = elementData(index);、、
+        E oldValue = elementData(index);//直接通过下标获取元素
 
-        int numMoved = elementCount - index - 1;
-        if (numMoved > 0)
+        int numMoved = elementCount - index - 1;//排在删除的元素后面的元素的数量（按下标从小到大排）
+        if (numMoved > 0)//如果被删除的元素后面还有元素
             System.arraycopy(elementData, index+1, elementData, index,
-                             numMoved);
-        elementData[--elementCount] = null; // Let gc do its work
+                             numMoved);//将被删除元素前面的元素和后面的元素连接（也就是被删除元素后面的元素整体向前移动一位）
+        elementData[--elementCount] = null; // Let gc do its work 将数组最后一个位置置空，因为上面是将被删除元素后面的元素整体向前移动一位，所以数组最后的一位应该设置为空
 
-        return oldValue;
+        return oldValue;//返回被删除的元素值
     }
 
     /**

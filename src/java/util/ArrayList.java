@@ -284,7 +284,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> if this list contains no elements
      */
     public boolean isEmpty() {
-        return size == 0;
+        return size == 0;//直接判断集合里面的元素数量是否为0
     }
 
     /**
@@ -297,7 +297,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> if this list contains the specified element
      */
     public boolean contains(Object o) {
-        return indexOf(o) >= 0;
+        return indexOf(o) >= 0;//如果返回值大于等于0 则返回true，否则返回false
     }
 
     /**
@@ -307,7 +307,7 @@ public class ArrayList<E> extends AbstractList<E>
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
      * or -1 if there is no such index.
      */
-    public int indexOf(Object o) {
+    public int indexOf(Object o) {//遍历集合数组，如果有这个元素，就返回这个元素的下标，如果没有就返回-1
         if (o == null) {
             for (int i = 0; i < size; i++)
                 if (elementData[i]==null)

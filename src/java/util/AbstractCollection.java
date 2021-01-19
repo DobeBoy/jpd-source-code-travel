@@ -83,7 +83,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * <p>This implementation returns <tt>size() == 0</tt>.
      */
     public boolean isEmpty() {
-        return size() == 0;
+        return size() == 0;//直接看集合的元素数量是否为0
     }
 
     /**

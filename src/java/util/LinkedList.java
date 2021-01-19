@@ -314,7 +314,7 @@ public class LinkedList<E>
      * @return {@code true} if this list contains the specified element
      */
     public boolean contains(Object o) {
-        return indexOf(o) != -1;
+        return indexOf(o) != -1;//如果这个元素存在就返回下标，然后拿返回值进行对比，如果 ！= -1，说明存在，返回true
     }
 
     /**
@@ -592,7 +592,7 @@ public class LinkedList<E>
      * @return the index of the first occurrence of the specified element in
      *         this list, or -1 if this list does not contain the element
      */
-    public int indexOf(Object o) {
+    public int indexOf(Object o) {//和ArrayList的contains一样，拿值进行对比，如果这个元素存在，就返回下标
         int index = 0;
         if (o == null) {
             for (Node<E> x = first; x != null; x = x.next) {
