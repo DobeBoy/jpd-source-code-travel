@@ -633,10 +633,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))//这个if语句的意思是，如果旧节点的hash值和新节点的hash值相同 且 旧节点的key和新节点的key相同 那么说明旧节点的key和新节点的key是同一个key，那么将这个旧节点先拿出来赋值给临时节点e，下面会做处理；这已经不是hash冲突了，这是key相同。
                 e = p;
-            else if (p instanceof TreeNode)//
+            else if (p instanceof TreeNode)//树版本的遍历，添加新节点的过程
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {
-                for (int binCount = 0; ; ++binCount) {//遍历链表/红黑树
+            else {//链表版本的遍历，添加新节点的过程
+                for (int binCount = 0; ; ++binCount) {//遍历链表
                     if ((e = p.next) == null) {//如果p的next节点为空，说明到链表尾节点了
                         p.next = newNode(hash, key, value, null);//将新节点连接到尾节点的next节点，新节点变为尾节点
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st   binCount是遍历的次数，，也就是链表的长度的，TREEIFY_THRESHOLD是链表转换为红黑树的阈值，如果链表的长度大于TREEIFY_THRESHOLD，开始转换为红黑树
@@ -657,9 +657,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 return oldValue;
             }
         }
-        ++modCount;
-        if (++size > threshold)
-            resize();
+        ++modCount;//结构改变，值+1
+        if (++size > threshold)//如果新增元素加进来之后，集合中元素的数量 大于了 扩容的临界值
+            resize();//扩容，重新计算大小
         afterNodeInsertion(evict);
         return null;
     }
