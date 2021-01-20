@@ -333,7 +333,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * to incorporate impact of the highest bits that would otherwise
      * never be used in index calculations because of table bounds.
      */
-    static final int hash(Object key) {
+    static final int hash(Object key) {//这里这样做是使计算出来的下标分布更均匀，具体看文章
         int h;
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
@@ -374,7 +374,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * Returns a power of two size for the given target capacity.
      */
-    static final int tableSizeFor(int cap) {//因为
+    static final int tableSizeFor(int cap) {//因为  这个方法是确保n为2的整数次
         int n = cap - 1;
         n |= n >>> 1;
         n |= n >>> 2;
@@ -423,7 +423,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     // Additionally, if the table array has not been allocated, this
     // field holds the initial array capacity, or zero signifying
     // DEFAULT_INITIAL_CAPACITY.)
-    int threshold;//当HashMap的size大于threshold时会执行扩容操作。 threshold=capacity*loadFactor
+    int threshold;//扩容的临界值，当HashMap的size大于threshold时会执行扩容操作。 threshold=capacity*loadFactor
 
     /**
      * The load factor for the hash table.
@@ -614,46 +614,46 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * Implements Map.put and related methods
      *
-     * @param hash hash for key
-     * @param key the key
-     * @param value the value to put
-     * @param onlyIfAbsent if true, don't change existing value
-     * @param evict if false, the table is in creation mode.
+     * @param hash    key的hash值
+     * @param key   hashmap的key
+     * @param value  key对应的value
+     * @param onlyIfAbsent   如果key相同，是否替换value； true是不替换，false是替换
+     * @param evict   表是否在创建模式，如果为false，是在创建模式
      * @return previous value, or null if none
      */
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
-        Node<K,V>[] tab; Node<K,V> p; int n, i;
-        if ((tab = table) == null || (n = tab.length) == 0)
+        Node<K,V>[] tab; Node<K,V> p; int n, i;//这儿p就是已经存在于数组中且和新节点的下标冲突的节点，下文我都用旧节点表示；n是数组长度 ；i是新节点的对应数组中的下标
+        if ((tab = table) == null || (n = tab.length) == 0)//检查table是否为空，为空就初始化（也就是扩容）
             n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)
-            tab[i] = newNode(hash, key, value, null);
-        else {
-            Node<K,V> e; K k;
+        if ((p = tab[i = (n - 1) & hash]) == null)//这儿的(n - 1) & hash 其实和jdk1.7中的 hash % length 是一个道理，都是计算下标的；查看table对应下标的节点是否为空，为空的话新节点就可以直接放入对应位置。
+            tab[i] = newNode(hash, key, value, null);//创建新节点，直接放入数组对应下标位置
+        else {//否则，说明hash值冲突了，table中( n -1) & hash这个位置有节点了，需要形成开始形成链表/红黑树了
+            Node<K,V> e; K k;//e是临时节点，当新节点的key和旧节点的key相同的时候，这个e用来存旧节点；k是旧节点的value
             if (p.hash == hash &&
-                ((k = p.key) == key || (key != null && key.equals(k))))
+                ((k = p.key) == key || (key != null && key.equals(k))))//这个if语句的意思是，如果旧节点的hash值和新节点的hash值相同 且 旧节点的key和新节点的key相同 那么说明旧节点的key和新节点的key是同一个key，那么将这个旧节点先拿出来赋值给临时节点e，下面会做处理；这已经不是hash冲突了，这是key相同。
                 e = p;
-            else if (p instanceof TreeNode)
+            else if (p instanceof TreeNode)//
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
             else {
-                for (int binCount = 0; ; ++binCount) {
-                    if ((e = p.next) == null) {
-                        p.next = newNode(hash, key, value, null);
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-                            treeifyBin(tab, hash);
+                for (int binCount = 0; ; ++binCount) {//遍历链表/红黑树
+                    if ((e = p.next) == null) {//如果p的next节点为空，说明到链表尾节点了
+                        p.next = newNode(hash, key, value, null);//将新节点连接到尾节点的next节点，新节点变为尾节点
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st   binCount是遍历的次数，，也就是链表的长度的，TREEIFY_THRESHOLD是链表转换为红黑树的阈值，如果链表的长度大于TREEIFY_THRESHOLD，开始转换为红黑树
+                            treeifyBin(tab, hash);//转换为红黑树
                         break;
                     }
                     if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))
-                        break;
+                        ((k = e.key) == key || (key != null && key.equals(k))))//e=p.next,所以e是旧节点，如果旧节点的hash值和新节点的hash值相同，且 旧节点的key和新节点的key相同
+                        break;//停止遍历，现在e存储的是key和新节点的key相同的那个节点
                     p = e;
                 }
             }
-            if (e != null) { // existing mapping for key
+            if (e != null) { // existing mapping for key 如果临时节点e不是空，说明新节点的key和节点e的key是相同的（因为节点e就是旧节点），那么就考虑是用新节点的value还是e的value
                 V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
+                if (!onlyIfAbsent || oldValue == null)//onlyIfAbsent   如果key相同，是否替换value； true是不替换，false是替换
                     e.value = value;
-                afterNodeAccess(e);
+                afterNodeAccess(e);//linkedhashmap的后置回调方法
                 return oldValue;
             }
         }
@@ -673,12 +673,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *
      * @return the table
      */
-    final Node<K,V>[] resize() {
-        Node<K,V>[] oldTab = table;
-        int oldCap = (oldTab == null) ? 0 : oldTab.length;
-        int oldThr = threshold;
-        int newCap, newThr = 0;
-        if (oldCap > 0) {
+    final Node<K,V>[] resize() {//扩容，重新计算数组大小
+        Node<K,V>[] oldTab = table;//oldTab 原数组
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;//oldCap 原数组的大小
+        int oldThr = threshold;//oldThr 原数组的临界值
+        int newCap, newThr = 0;//newCap 新数组大小 ， 新数组临界值
+        if (oldCap > 0) {//如果原数组大小 > 0
             if (oldCap >= MAXIMUM_CAPACITY) {
                 threshold = Integer.MAX_VALUE;
                 return oldTab;
@@ -687,7 +687,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
         }
-        else if (oldThr > 0) // initial capacity was placed in threshold
+        else if (oldThr > 0) // initial capacity was placed in threshold  初始化容量设置为阈值
             newCap = oldThr;
         else {               // zero initial threshold signifies using defaults
             newCap = DEFAULT_INITIAL_CAPACITY;
