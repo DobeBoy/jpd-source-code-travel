@@ -623,9 +623,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
-        Node<K,V>[] tab; Node<K,V> p; int n, i;//这儿p就是已经存在于数组中且和新节点的下标冲突的节点，下文我都用旧节点表示；n是数组长度 ；i是新节点的对应数组中的下标
+        Node<K,V>[] tab; Node<K,V> p; int n, i;//这儿p就是已经存在于数组中且和新节点的下标冲突的节点，下文我都用旧节点表示p；n是数组长度 ；i是新节点的对应数组中的下标
         if ((tab = table) == null || (n = tab.length) == 0)//检查table是否为空，为空就初始化（也就是扩容）
-            n = (tab = resize()).length;
+            n = (tab = resize()).length;//resize()扩容，重新计算数组大小；n就是新数组大小
         if ((p = tab[i = (n - 1) & hash]) == null)//这儿的(n - 1) & hash 其实和jdk1.7中的 hash % length 是一个道理，都是计算下标的；查看table对应下标的节点是否为空，为空的话新节点就可以直接放入对应位置。
             tab[i] = newNode(hash, key, value, null);//创建新节点，直接放入数组对应下标位置
         else {//否则，说明hash值冲突了，table中( n -1) & hash这个位置有节点了，需要形成开始形成链表/红黑树了
@@ -674,42 +674,42 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @return the table
      */
     final Node<K,V>[] resize() {//扩容，重新计算数组大小
-        Node<K,V>[] oldTab = table;//oldTab 原数组
+        Node<K,V>[] oldTab = table;//oldTab就数组，这儿将table赋值给oldTab是为了遍历旧数组，将节点拷贝给新数组
         int oldCap = (oldTab == null) ? 0 : oldTab.length;//oldCap 原数组的大小
-        int oldThr = threshold;//oldThr 原数组的临界值
-        int newCap, newThr = 0;//newCap 新数组大小 ， 新数组临界值
+        int oldThr = threshold;//oldThr原数组扩容的临界值
+        int newCap, newThr = 0;//newCap新数组大小 ， newThr新数组扩容的临界值
         if (oldCap > 0) {//如果原数组大小 > 0
-            if (oldCap >= MAXIMUM_CAPACITY) {
-                threshold = Integer.MAX_VALUE;
-                return oldTab;
+            if (oldCap >= MAXIMUM_CAPACITY) {//如果原数组大小大于最大容量
+                threshold = Integer.MAX_VALUE;//将扩容的临界值设置为Integer的最大值
+                return oldTab;//返回原数组
             }
             else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
-                     oldCap >= DEFAULT_INITIAL_CAPACITY)
-                newThr = oldThr << 1; // double threshold
+                     oldCap >= DEFAULT_INITIAL_CAPACITY)//新数组大小=原数组大小 * 2（左移一位相当于*2，所以hashmap是2倍扩容）；且*2后新数组大小还是小于等于最大容量，且原数组大小大于等于默认的初始容量16
+                newThr = oldThr << 1; // double threshold 新数组的扩容临界值就是原数组扩容临界值的2倍
         }
         else if (oldThr > 0) // initial capacity was placed in threshold  初始化容量设置为阈值
             newCap = oldThr;
-        else {               // zero initial threshold signifies using defaults
-            newCap = DEFAULT_INITIAL_CAPACITY;
-            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        else {               // zero initial threshold signifies using defaults （oldCap小于等于0，oldThr也小于等于0；也就是这个集合是刚创建的大小为0的空集合）
+            newCap = DEFAULT_INITIAL_CAPACITY;//此时需要将新数组大小设置为默认值16
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);//新数组的扩容临界值设置为16*0.75  数组大小*装载因子
         }
         if (newThr == 0) {
             float ft = (float)newCap * loadFactor;
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
                       (int)ft : Integer.MAX_VALUE);
         }
-        threshold = newThr;
+        threshold = newThr;//更新集合的扩容临界值
         @SuppressWarnings({"rawtypes","unchecked"})
             Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
         table = newTab;
-        if (oldTab != null) {
-            for (int j = 0; j < oldCap; ++j) {
-                Node<K,V> e;
+        if (oldTab != null) {//如果旧数组不为空，就将就数组的节点全部拷贝到新数组中
+            for (int j = 0; j < oldCap; ++j) {//遍历拷贝节点
+                Node<K,V> e;//新节点
                 if ((e = oldTab[j]) != null) {
-                    oldTab[j] = null;
-                    if (e.next == null)
-                        newTab[e.hash & (newCap - 1)] = e;
-                    else if (e instanceof TreeNode)
+                    oldTab[j] = null;//将旧节点置空，方便gc
+                    if (e.next == null)//如果e的下一个节点为空 ， 也就是还没有形成链表
+                        newTab[e.hash & (newCap - 1)] = e;//将新节点放入新数组中，这儿e.hash是这个节点key的hash值，e.hash & (newCap - 1)是找这个节点的下标
+                    else if (e instanceof TreeNode)//如果是红黑树，遍历红黑树，进行节点拷贝
                         ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
                     else { // preserve order
                         Node<K,V> loHead = null, loTail = null;
@@ -1797,11 +1797,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * linked node.
      */
     static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
-        TreeNode<K,V> parent;  // red-black tree links
-        TreeNode<K,V> left;
-        TreeNode<K,V> right;
-        TreeNode<K,V> prev;    // needed to unlink next upon deletion
-        boolean red;
+        TreeNode<K,V> parent;  // red-black tree links 父节点
+        TreeNode<K,V> left; //左儿子节点
+        TreeNode<K,V> right; //右儿子节点
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion  上一个节点，删除下一个节点的时候用的
+        boolean red;//是否是红色
         TreeNode(int hash, K key, V val, Node<K,V> next) {
             super(hash, key, val, next);
         }
@@ -2119,19 +2119,19 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * Splits nodes in a tree bin into lower and upper tree bins,
          * or untreeifies if now too small. Called only from resize;
          * see above discussion about split bits and indices.
-         *
-         * @param map the map
-         * @param tab the table for recording bin heads
-         * @param index the index of the table being split
-         * @param bit the bit of hash to split on
+         *  这是一个修剪方法，对红黑树进行修剪
+         * @param map the map 当前的HashMap
+         * @param tab the table for recording bin heads 新数组
+         * @param index the index of the table being split  从哪个下标开始修剪
+         * @param bit the bit of hash to split on 要修剪的位数
          */
         final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
-            TreeNode<K,V> b = this;
+            TreeNode<K,V> b = this;//当前节点作为根节点的红黑树 b就是根节点
             // Relink into lo and hi lists, preserving order
             TreeNode<K,V> loHead = null, loTail = null;
             TreeNode<K,V> hiHead = null, hiTail = null;
             int lc = 0, hc = 0;
-            for (TreeNode<K,V> e = b, next; e != null; e = next) {
+            for (TreeNode<K,V> e = b, next; e != null; e = next) {//博客说明一下这儿，其实就是一个遍历操作，遍历next；next = e.next; e = next;这两步骤循环，知道e == null;
                 next = (TreeNode<K,V>)e.next;
                 e.next = null;
                 if ((e.hash & bit) == 0) {
