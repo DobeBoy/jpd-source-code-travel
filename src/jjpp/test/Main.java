@@ -13,5 +13,6 @@ public class Main {
         for (int i = 0; i < 100; i++) {
             map.put(i,i);
         }
+        map.get()
     }
 }

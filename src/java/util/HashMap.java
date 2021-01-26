@@ -232,7 +232,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The default initial capacity - MUST be a power of two.
      */
-    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16 默认的初始容量
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; //16 默认的初始容量16
 
     /**
      * The maximum capacity, used if a higher value is implicitly specified
@@ -244,7 +244,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /**
      * The load factor used when none specified in constructor.
      */
-    static final float DEFAULT_LOAD_FACTOR = 0.75f;//构造函数中没有指定装载因子时候默认的装载因子 用来计算扩容的阈值
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;//默认的装载因子0.75，用来计算扩容的阈值
 
     /**
      * The bin count threshold for using a tree rather than list for a
@@ -254,14 +254,14 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * tree removal about conversion back to plain bins upon
      * shrinkage.
      */
-    static final int TREEIFY_THRESHOLD = 8;//链表转换为红黑树的阈值
+    static final int TREEIFY_THRESHOLD = 8;//链表转换为红黑树的阈值，9个节点转换
 
     /**
      * The bin count threshold for untreeifying a (split) bin during a
      * resize operation. Should be less than TREEIFY_THRESHOLD, and at
      * most 6 to mesh with shrinkage detection under removal.
      */
-    static final int UNTREEIFY_THRESHOLD = 6;//红黑树转换为链表的阈值
+    static final int UNTREEIFY_THRESHOLD = 6;//红黑树转换为链表的阈值，6个节点转换
 
     /**
      * The smallest table capacity for which bins may be treeified.
@@ -269,17 +269,17 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
      * between resizing and treeification thresholds.
      */
-    static final int MIN_TREEIFY_CAPACITY = 64;//链表可以被转换为红黑树需要的最小数组容量
+    static final int MIN_TREEIFY_CAPACITY = 64;//链表转换红黑树时候，table数组的最小长度。
 
     /**
      * Basic hash bin node, used for most entries.  (See below for
      * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
      */
-    static class Node<K,V> implements Map.Entry<K,V> {
-        final int hash;
-        final K key;
-        V value;
-        Node<K,V> next;
+    static class Node<K,V> implements Map.Entry<K,V> {//链表节点，继承自Entry
+        final int hash;//key的hash值
+        final K key;//key
+        V value;//value
+        Node<K,V> next;//后继节点
 
         Node(int hash, K key, V value, Node<K,V> next) {
             this.hash = hash;
@@ -333,28 +333,28 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * to incorporate impact of the highest bits that would otherwise
      * never be used in index calculations because of table bounds.
      */
-    static final int hash(Object key) {//这里这样做是使计算出来的下标分布更均匀，具体看文章
+    static final int hash(Object key) {//计算key的hash值
         int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);//h >>> 16是为了让高位参数运算
     }
 
     /**
      * Returns x's Class if it is of the form "class C implements
      * Comparable<C>", else null.
      */
-    static Class<?> comparableClassFor(Object x) {
-        if (x instanceof Comparable) {
+    static Class<?> comparableClassFor(Object x) {//x就是入参key
+        if (x instanceof Comparable) {//判断x是否是Comparable的实例
             Class<?> c; Type[] ts, as; Type t; ParameterizedType p;
-            if ((c = x.getClass()) == String.class) // bypass checks
+            if ((c = x.getClass()) == String.class) // bypass checks 判断x是否是String类型
                 return c;
-            if ((ts = c.getGenericInterfaces()) != null) {
+            if ((ts = c.getGenericInterfaces()) != null) {//遍历x实现的所有接口  其实就是判断x是否实现了Comparable接口，实现的话就返回x的类型。
                 for (int i = 0; i < ts.length; ++i) {
-                    if (((t = ts[i]) instanceof ParameterizedType) &&
-                        ((p = (ParameterizedType)t).getRawType() ==
+                    if (((t = ts[i]) instanceof ParameterizedType) &&//如果当前接口t是个泛型接口
+                        ((p = (ParameterizedType)t).getRawType() ==//如果该泛型接口t的原始类型p 是 Comparable 接口
                          Comparable.class) &&
                         (as = p.getActualTypeArguments()) != null &&
-                        as.length == 1 && as[0] == c) // type arg is c
-                        return c;
+                        as.length == 1 && as[0] == c) // type arg is c 如果该Comparable接口p只定义了一个泛型参数,且这个参数就是c
+                        return c;//返回c
                 }
             }
         }
@@ -392,7 +392,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (We also tolerate length zero in some operations to allow
      * bootstrapping mechanics that are currently not needed.)
      */
-    transient Node<K,V>[] table;
+    transient Node<K,V>[] table;//数组表，大小可以改变，必须是2的倍数；里面放的就是一个个Node节点，所有的链表/红黑树的头节点都在这个数组表中
 
     /**
      * Holds cached entrySet(). Note that AbstractMap fields are used
@@ -553,7 +553,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     public V get(Object key) {
         Node<K,V> e;
-        return (e = getNode(hash(key), key)) == null ? null : e.value;
+        return (e = getNode(hash(key), key)) == null ? null : e.value;//如果获取的节点位空，返回null，否则返回节点的value
     }
 
     /**
@@ -563,19 +563,19 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @param key the key
      * @return the node, or null if none
      */
-    final Node<K,V> getNode(int hash, Object key) {
+    final Node<K,V> getNode(int hash, Object key) {//入参的hash值，入参的key
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
-        if ((tab = table) != null && (n = tab.length) > 0 &&
+        if ((tab = table) != null && (n = tab.length) > 0 &&//对数组进行校验，数组不为空 && 数组长度大于0 && 数组对应下标[(n - 1) & hash]有节点
             (first = tab[(n - 1) & hash]) != null) {
-            if (first.hash == hash && // always check first node
+            if (first.hash == hash && // always check first node 检查头节点的hash值是否和入参的hash值相同，头节点的key是否和入参的key相同
                 ((k = first.key) == key || (key != null && key.equals(k))))
-                return first;
-            if ((e = first.next) != null) {
-                if (first instanceof TreeNode)
+                return first;//如果相同，说明是要找的节点
+            if ((e = first.next) != null) {//如果头节点不是要找的节点，就看头节点是否有next节点，如果有，说明形成了 链表/红黑树 ；就遍历 链表/红黑树 找对应的节点
+                if (first instanceof TreeNode)//如果first节点是TreeNode类型，说明已经形成了红黑树，就遍历树
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
-                do {
+                do {//否则 遍历遍历链表
                     if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))
+                        ((k = e.key) == key || (key != null && key.equals(k))))//向下遍历链表，知道找到和 入参的hash值和key 相同的节点。
                         return e;
                 } while ((e = e.next) != null);
             }
@@ -1810,7 +1810,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * Returns root of tree containing this node.
          */
         final TreeNode<K,V> root() {
-            for (TreeNode<K,V> r = this, p;;) {
+            for (TreeNode<K,V> r = this, p;;) {//this是当前节点，从当前节点开始向上遍历找父节点，直到找到没有父节点的那个节点，就是根节点。
                 if ((p = r.parent) == null)
                     return r;
                 r = p;
@@ -1847,28 +1847,29 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * The kc argument caches comparableClassFor(key) upon first use
          * comparing keys.
          */
-        final TreeNode<K,V> find(int h, Object k, Class<?> kc) {
-            TreeNode<K,V> p = this;
-            do {
-                int ph, dir; K pk;
-                TreeNode<K,V> pl = p.left, pr = p.right, q;
-                if ((ph = p.hash) > h)
-                    p = pl;
-                else if (ph < h)
-                    p = pr;
-                else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+        final TreeNode<K,V> find(int h, Object k, Class<?> kc) {//hash,key,key的类型
+            TreeNode<K,V> p = this;//this是调用此方法的节点，也就是根节点
+            do {//从根节点开始向下遍历
+                int ph, dir; K pk;//ph:根节点的hash，dir向左遍历还是向右遍历，pk:根节点的key
+                TreeNode<K,V> pl = p.left, pr = p.right, q;//pl:根节点的左子节点，pr:根节点的右子节点
+                if ((ph = p.hash) > h)//如果入参的hash值小于根节点的hash值，向左遍历
+                    p = pl;//现在p为p的左子节点
+                else if (ph < h)//如果入参的hash值大于根节点的hash值，向右遍历
+                    p = pr;//现在p为p的右子节点
+                else if ((pk = p.key) == k || (k != null && k.equals(pk)))//如果遍历到某个节点的key和入参的key相同，说明找到了要找的节点，返回这个节点
                     return p;
-                else if (pl == null)
+                else if (pl == null)//执行到这一步，说明入参的hash值和p的hash值大小相同，但是入参的key和p的key不同；此时如果p的左子节点为空，就向右遍历
                     p = pr;
-                else if (pr == null)
+                else if (pr == null)//如果p节点的右子节点为null，开始向左遍历
                     p = pl;
-                else if ((kc != null ||
-                          (kc = comparableClassFor(k)) != null) &&
-                         (dir = compareComparables(kc, k, pk)) != 0)
-                    p = (dir < 0) ? pl : pr;
-                else if ((q = pr.find(h, k, kc)) != null)
+                else if ((kc != null ||//
+                          (kc = comparableClassFor(k)) != null) &&//如果kc不为空，说明k实现了Comparable接口，comparableClassFor(k)就是判断是否实现了Comparable接口
+                         (dir = compareComparables(kc, k, pk)) != 0)//如果k实现了Comparable接口，说明有自己的比较方法，就用自己的比较方法进行比较
+                    p = (dir < 0) ? pl : pr;//如果返回的接口 < 0,说明k < pk,向左遍历，否则向右遍历
+                else if ((q = pr.find(h, k, kc)) != null)//代码走到此处, 代表key所属类没有实现Comparable, 直接指定向p的右边遍历
+
                     return q;
-                else
+                else//代码走到此处说明右边遍历没有找到，那么就左边遍历
                     p = pl;
             } while (p != null);
             return null;
@@ -1877,8 +1878,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         /**
          * Calls find for root node.
          */
-        final TreeNode<K,V> getTreeNode(int h, Object k) {
-            return ((parent != null) ? root() : this).find(h, k, null);
+        final TreeNode<K,V> getTreeNode(int h, Object k) {//h就是计算出来的hash， k就是key
+            return ((parent != null) ? root() : this).find(h, k, null);//首先找到根节点，root()就是找根节点,如果当前节点parent节点为null，说明当前节点就是根节点（this就是当前节点）；然后根节点调用find()
         }
 
         /**
