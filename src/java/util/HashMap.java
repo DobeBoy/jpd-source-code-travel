@@ -623,38 +623,38 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
-        Node<K,V>[] tab; Node<K,V> p; int n, i;//这儿p就是已经存在于数组中且和新节点的下标冲突的节点，下文我都用旧节点表示；n是数组长度 ；i是新节点的对应数组中的下标
-        if ((tab = table) == null || (n = tab.length) == 0)//检查table是否为空，为空就初始化（也就是扩容）
-            n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)//这儿的(n - 1) & hash 其实和jdk1.7中的 hash % length 是一个道理，都是计算下标的；查看table对应下标的节点是否为空，为空的话新节点就可以直接放入对应位置。
+        Node<K,V>[] tab; Node<K,V> p; int n, i;
+        if ((tab = table) == null || (n = tab.length) == 0)//检查table是否为空，为空就初始化（也就是扩容）调用resize方法
+            n = (tab = resize()).length;//扩容
+        if ((p = tab[i = (n - 1) & hash]) == null)//通过(n - 1) & hash 计算下标位置，然后将数组对应下标的节点赋值给p，如果数组对应下标为空，可以直接放入
             tab[i] = newNode(hash, key, value, null);//创建新节点，直接放入数组对应下标位置
-        else {//否则，说明hash值冲突了，table中( n -1) & hash这个位置有节点了，需要形成开始形成链表/红黑树了
-            Node<K,V> e; K k;//e是临时节点，当新节点的key和旧节点的key相同的时候，这个e用来存旧节点；k是旧节点的value
+        else {//tab数组对应下标位置不为空，说明hash冲突了，table中( n -1) & hash这个位置有节点了，就不能直接放入，需要开始向下遍历了
+            Node<K,V> e; K k;
             if (p.hash == hash &&
-                ((k = p.key) == key || (key != null && key.equals(k))))//这个if语句的意思是，如果旧节点的hash值和新节点的hash值相同 且 旧节点的key和新节点的key相同 那么说明旧节点的key和新节点的key是同一个key，那么将这个旧节点先拿出来赋值给临时节点e，下面会做处理；这已经不是hash冲突了，这是key相同。
-                e = p;
-            else if (p instanceof TreeNode)//树版本的遍历，添加新节点的过程
-                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {//链表版本的遍历，添加新节点的过程
+                ((k = p.key) == key || (key != null && key.equals(k))))//判断p节点的key和入参key是否相等，HashMap中key是不可以重复的，key相同，那么两个节点就只能存在一个了
+                e = p;//把p节点赋值给e，后面会处理这个e节点
+            else if (p instanceof TreeNode)//判断p节点是否是TreeNode，如果是，说明已经形成了红黑树，调用putTreeVal进行新增树节点。
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);//this就是当前调用putVal方法的hashmap实例
+            else {//不是红黑树，那么肯定就是链表了，遍历链表，将新节点添加到链表尾部
                 for (int binCount = 0; ; ++binCount) {//遍历链表
                     if ((e = p.next) == null) {//如果p的next节点为空，说明到链表尾节点了
                         p.next = newNode(hash, key, value, null);//将新节点连接到尾节点的next节点，新节点变为尾节点
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st   binCount是遍历的次数，，也就是链表的长度的，TREEIFY_THRESHOLD是链表转换为红黑树的阈值，如果链表的长度大于TREEIFY_THRESHOLD，开始转换为红黑树
+                        if (binCount >= TREEIFY_THRESHOLD - 1) //binCount记录节点链表节点数量，TREEIFY_THRESHOLD是链表转换为红黑树的阈值，如果链表的长度大于TREEIFY_THRESHOLD，开始转换为红黑树，TREEIFY_THRESHOLD - 1是因为循环是从p的下一个开始的。
                             treeifyBin(tab, hash);//转换为红黑树
-                        break;
+                        break;//跳出循环，从这个if语句可以看出来，是先将新节点添加到链表尾部，然后再转为红黑树的。
                     }
-                    if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))//e=p.next,所以e是旧节点，如果旧节点的hash值和新节点的hash值相同，且 旧节点的key和新节点的key相同
-                        break;//停止遍历，现在e存储的是key和新节点的key相同的那个节点
-                    p = e;
+                    if (e.hash == hash &&//上一个if语句给e赋值了 e = p.next
+                        ((k = e.key) == key || (key != null && key.equals(k))))//如果e的hash和入参的hash相同，key也和入参的key相同，说明key重复了，此时e是那个重复的节点，等到下面统一处理e
+                        break;//跳出循环
+                    p = e;//将p指向下一个节点
                 }
             }
-            if (e != null) { // existing mapping for key 如果临时节点e不是空，说明新节点的key和节点e的key是相同的（因为节点e就是旧节点），那么就考虑是用新节点的value还是e的value
+            if (e != null) { //如果e不为空，那么这个e肯定是重复的那个节点，将新的value覆盖这个重复节点的value
                 V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)//onlyIfAbsent   如果key相同，是否替换value； true是不替换，false是替换
+                if (!onlyIfAbsent || oldValue == null)//onlyIfAbsent 如果key相同，是否替换value； true是不替换，false是替换
                     e.value = value;
-                afterNodeAccess(e);//linkedhashmap的后置回调方法
-                return oldValue;
+                afterNodeAccess(e);//linkedhashmap的方法
+                return oldValue;//返回旧值
             }
         }
         ++modCount;//结构改变，值+1
@@ -1967,30 +1967,30 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          */
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
-            Class<?> kc = null;
+            Class<?> kc = null;//key的class类型
             boolean searched = false;
-            TreeNode<K,V> root = (parent != null) ? root() : this;
-            for (TreeNode<K,V> p = root;;) {
-                int dir, ph; K pk;
-                if ((ph = p.hash) > h)
-                    dir = -1;
-                else if (ph < h)
-                    dir = 1;
-                else if ((pk = p.key) == k || (k != null && k.equals(pk)))
-                    return p;
-                else if ((kc == null &&
-                          (kc = comparableClassFor(k)) == null) ||
-                         (dir = compareComparables(kc, k, pk)) == 0) {
-                    if (!searched) {
-                        TreeNode<K,V> q, ch;
-                        searched = true;
+            TreeNode<K,V> root = (parent != null) ? root() : this;//如果父节点不为空，需要通过root()查找根节点；如果该节点没有父节点，那么该节点就是父节点。
+            for (TreeNode<K,V> p = root;;) {//遍历红黑树
+                int dir, ph; K pk;//dir判断向左遍历还是向右遍历；ph当前节点的hash值，pk当前节点的key
+                if ((ph = p.hash) > h)//如果入参的hash值 < 当前节点的hash值
+                    dir = -1;//dir = -1 也就是向左子节点遍历
+                else if (ph < h)//入参的hash值 > 当前节点的hash值
+                    dir = 1;//向右遍历
+                else if ((pk = p.key) == k || (k != null && k.equals(pk)))//如果入参的key和当前节点的key相同，能走到这，说明hash值也相同
+                    return p;//则返回当前节点，停止循环。在外层处理
+                else if ((kc == null &&//走到这一步说明 当前节点的hash值 和 指定key的hash值 是相等的，但是equals不等
+                          (kc = comparableClassFor(k)) == null) ||//如果kc不为空，说明key的类型实现了conparable接口
+                         (dir = compareComparables(kc, k, pk)) == 0) {//用实现的conparableTo方法对 入参key 和 当前节点key进行比较
+                    if (!searched) {//走到这儿，说明key的类型没有实现conparable接口 或者 实现了conparable接口 但是 入参key和当前节点key 用conparableTo方法比较之后 返回值为0
+                        TreeNode<K,V> q, ch;//第一次符合条件的时候，会分别从左子节点和右子节点进行遍历查找，也就是用左子节点和右子节点调用find方法。
+                        searched = true;//searched标识是否已经对比过当前节点的左右子节点了，如果还没有遍历过，那么就递归遍历对比，看是否能够得到那个键对象equals相等的的节点，如果得到了键的equals相等的的节点就返回，如果还是没有键的equals相等的节点，那说明应该创建一个新节点了
                         if (((ch = p.left) != null &&
                              (q = ch.find(h, k, kc)) != null) ||
                             ((ch = p.right) != null &&
                              (q = ch.find(h, k, kc)) != null))
                             return q;
                     }
-                    dir = tieBreakOrder(k, pk);
+                    dir = tieBreakOrder(k, pk);//走到这里就说明，遍历了当前节点所有子节点也没有找到和当前键equals相等的节点;定义一套规则比较入参k和p节点key的大小，看看是向左遍历还是向右遍历
                 }
 
                 TreeNode<K,V> xp = p;
