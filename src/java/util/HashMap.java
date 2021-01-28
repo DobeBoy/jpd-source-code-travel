@@ -753,21 +753,21 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
-        if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+        if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)//如果tab为空，或者tab长度小于64。从这可以知道，链表转红黑树必须数组长度大于等于64
             resize();
-        else if ((e = tab[index = (n - 1) & hash]) != null) {
+        else if ((e = tab[index = (n - 1) & hash]) != null) {//根据hash值计算索引值，将该索引位置的节点赋值给e，从e开始遍历该索引位置的链表，e就是链表头节点
             TreeNode<K,V> hd = null, tl = null;
             do {
-                TreeNode<K,V> p = replacementTreeNode(e, null);
-                if (tl == null)
+                TreeNode<K,V> p = replacementTreeNode(e, null);//将链表节点转换为红黑树节点，Node --> TreeNode
+                if (tl == null)//第一次遍历，将链表的头节点设置为树的根节点
                     hd = p;
                 else {
-                    p.prev = tl;
+                    p.prev = tl;//这是转换为TreeNode后，还要维护原来的链表结构
                     tl.next = p;
                 }
-                tl = p;
+                tl = p;//将p节点赋值给tl，用于在下一次循环中作为上一个节点进行一些链表的关联操作（p.prev = tl 和 tl.next = p）
             } while ((e = e.next) != null);
-            if ((tab[index] = hd) != null)
+            if ((tab[index] = hd) != null)//走到这一步，所有转换号的TreeNode还是没有树结构，但是维持着链表结构。这儿是将TreeNode新链表的头节点放到tab对应下标位置，作为根节点，构建红黑树
                 hd.treeify(tab);
         }
     }
@@ -1883,10 +1883,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Tie-breaking utility for ordering insertions when equal
-         * hashCodes and non-comparable. We don't require a total
-         * order, just a consistent insertion rule to maintain
-         * equivalence across rebalancings. Tie-breaking further than
+         * Tie-breaking utility for ordering insertions when equal //用这个方法来比较两个对象，返回值要么大于0，要么小于0，不会为0
+         * hashCodes and non-comparable. We don't require a total //也就是说这一步一定能确定要插入的节点要么是树的左节点，要么是右节点，不然就无继续满足二叉树结构了
+         * order, just a consistent insertion rule to maintain //先比较两个对象的类名，类名是字符串对象，就按字符串的比较规则
+         * equivalence across rebalancings. Tie-breaking further than //如果两个对象是同一个类型，那么调用本地方法为两个对象生成hashCode值，再进行比较，hashCode相等的话返回-1
          * necessary simplifies testing a bit.
          */
         static int tieBreakOrder(Object a, Object b) {
@@ -1978,7 +1978,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     dir = 1;//向右遍历
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))//如果入参的key和当前节点的key相同，能走到这，说明hash值也相同
                     return p;//则返回当前节点，停止循环。在外层处理
-                else if ((kc == null &&//走到这一步说明 当前节点的hash值 和 指定key的hash值 是相等的，但是equals不等
+                else if ((kc == null &&//走到这一步说明 当前节点的hash值 和 指定key的hash值 是相等的，但key的equals不等
                           (kc = comparableClassFor(k)) == null) ||//如果kc不为空，说明key的类型实现了conparable接口
                          (dir = compareComparables(kc, k, pk)) == 0) {//用实现的conparableTo方法对 入参key 和 当前节点key进行比较
                     if (!searched) {//走到这儿，说明key的类型没有实现conparable接口 或者 实现了conparable接口 但是 入参key和当前节点key 用conparableTo方法比较之后 返回值为0
@@ -1993,19 +1993,19 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     dir = tieBreakOrder(k, pk);//走到这里就说明，遍历了当前节点所有子节点也没有找到和当前键equals相等的节点;定义一套规则比较入参k和p节点key的大小，看看是向左遍历还是向右遍历
                 }
 
-                TreeNode<K,V> xp = p;
-                if ((p = (dir <= 0) ? p.left : p.right) == null) {
-                    Node<K,V> xpn = xp.next;
-                    TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);
+                TreeNode<K,V> xp = p;//xp节点是p节点的一个临时变量
+                if ((p = (dir <= 0) ? p.left : p.right) == null) {//dir<=0则向p左边查找,否则向p右边查找,如果为null,说明到叶子了（叶子是叶子节点的子节点，也就是null）,则代表该位置即为新增节点的位置
+                    Node<K,V> xpn = xp.next;//xp节点的下一个节点
+                    TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);//新建了一个树节点x，且维护链表结构，新节点x的后置节点是xp节点的子节点
                     if (dir <= 0)
-                        xp.left = x;
+                        xp.left = x;//新节点x是xp节点的左子节点
                     else
-                        xp.right = x;
-                    xp.next = x;
-                    x.parent = x.prev = xp;
+                        xp.right = x;//新节点x是xp节点的右子节点
+                    xp.next = x;//新节点是xp节点后置节点  也就是将新节点放在了xp节点和xp节点原来子节点的中间。这是维护链表结构
+                    x.parent = x.prev = xp;//新节点x的父节点 和 上一个节点 是xp节点  这是维护树结构
                     if (xpn != null)
-                        ((TreeNode<K,V>)xpn).prev = x;
-                    moveRootToFront(tab, balanceInsertion(root, x));
+                        ((TreeNode<K,V>)xpn).prev = x;//如果新节点原来有子节点，那么就维护原子节点和新节点x的关系 新节点是原来子节点的上一个节点
+                    moveRootToFront(tab, balanceInsertion(root, x));//调整红黑树的平衡
                     return null;
                 }
             }
