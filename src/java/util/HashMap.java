@@ -755,7 +755,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         int n, index; Node<K,V> e;
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)//如果tab为空，或者tab长度小于64。从这可以知道，链表转红黑树必须数组长度大于等于64
             resize();
-        else if ((e = tab[index = (n - 1) & hash]) != null) {//根据hash值计算索引值，将该索引位置的节点赋值给e，从e开始遍历该索引位置的链表，e就是链表头节点
+        else if ((e = tab[index = (n - 1) & hash]) != null) {//根据hash值计算数组下标值，将该下标位置的节点赋值给e，从e开始遍历该下标位置的链表，e就是链表头节点
             TreeNode<K,V> hd = null, tl = null;
             do {
                 TreeNode<K,V> p = replacementTreeNode(e, null);//将链表节点转换为红黑树节点，Node --> TreeNode
@@ -1818,27 +1818,27 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Ensures that the given root is the first node of its bin.
+         * Ensures that the given root is the first node of its bin.根节点就是root节点
          */
-        static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
+        static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {//root节点就是根节点
             int n;
-            if (root != null && tab != null && (n = tab.length) > 0) {
-                int index = (n - 1) & root.hash;
-                TreeNode<K,V> first = (TreeNode<K,V>)tab[index];
-                if (root != first) {
-                    Node<K,V> rn;
-                    tab[index] = root;
-                    TreeNode<K,V> rp = root.prev;
+            if (root != null && tab != null && (n = tab.length) > 0) {//如果根节点不为空，tab数组也不为空
+                int index = (n - 1) & root.hash;//根据根节点的hash，计算出来应该在数组中的下标
+                TreeNode<K,V> first = (TreeNode<K,V>)tab[index];//根据计算出来的下标，获取到对应的节点
+                if (root != first) {//如果该下标位置的头节点不是根节点，将下标位置的头节点替换为根节点
+                    Node<K,V> rn;//根节点的下一个节点
+                    tab[index] = root;//将数组下标位置设置为根节点
+                    TreeNode<K,V> rp = root.prev;//根节点的上一个节点
                     if ((rn = root.next) != null)
-                        ((TreeNode<K,V>)rn).prev = rp;
+                        ((TreeNode<K,V>)rn).prev = rp;//将rn的上一个节点设置为rp
                     if (rp != null)
-                        rp.next = rn;
+                        rp.next = rn;//将rp的下一个节点设置为rn   这一步和上一步其实就是将根节点从链表中拿出来。
                     if (first != null)
-                        first.prev = root;
-                    root.next = first;
-                    root.prev = null;
+                        first.prev = root;//将根节点root设置为 链表原来的头节点first 的上一个节点，也就是先根节点是链表的头节点
+                    root.next = first;//根节点root的下一个节点是 first节点
+                    root.prev = null;//根节点root的上一个节点设置为空
                 }
-                assert checkInvariants(root);
+                assert checkInvariants(root);//检查树是否正常
             }
         }
 
@@ -1906,43 +1906,43 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         final void treeify(Node<K,V>[] tab) {
             TreeNode<K,V> root = null;
             for (TreeNode<K,V> x = this, next; x != null; x = next) {
-                next = (TreeNode<K,V>)x.next;
-                x.left = x.right = null;
-                if (root == null) {
-                    x.parent = null;
-                    x.red = false;
-                    root = x;
+                next = (TreeNode<K,V>)x.next;//通过链表的next获取下一个节点
+                x.left = x.right = null;//将x的左右子节点置空
+                if (root == null) {//如果还没有父节点，就将x设置为父节点
+                    x.parent = null;//根节点没有父节点
+                    x.red = false;//根节点是黑色
+                    root = x;//将x设置为根节点
                 }
                 else {
                     K k = x.key;
                     int h = x.hash;
                     Class<?> kc = null;
-                    for (TreeNode<K,V> p = root;;) {
+                    for (TreeNode<K,V> p = root;;) {//将root赋值给p，从p开始遍历
                         int dir, ph;
                         K pk = p.key;
-                        if ((ph = p.hash) > h)
-                            dir = -1;
-                        else if (ph < h)
-                            dir = 1;
-                        else if ((kc == null &&
+                        if ((ph = p.hash) > h)//比较p的hash 和 x的hash
+                            dir = -1;//-1代表x的hash比p的hash 小 是p的左子节点
+                        else if (ph < h)//比较p的hash 和 x的hash
+                            dir = 1;//1代表x的hash比p的hash 大 是p的右子节点
+                        else if ((kc == null &&//和之前一样，通过ComparableTo去比较x和p的key，因为前面hash没比较出大小，所以通过ComparableTo去比较key
                                   (kc = comparableClassFor(k)) == null) ||
                                  (dir = compareComparables(kc, k, pk)) == 0)
-                            dir = tieBreakOrder(k, pk);
+                            dir = tieBreakOrder(k, pk);//如果compatableTo还是没比较出大小，或者key就没有实现Comparable接口，那么就定义一个规则去比较key的大小。
 
-                        TreeNode<K,V> xp = p;
-                        if ((p = (dir <= 0) ? p.left : p.right) == null) {
-                            x.parent = xp;
+                        TreeNode<K,V> xp = p;//走到这，hash或者key的大小已经比较完了，x在p的左子节点还是右子节点可以确认了
+                        if ((p = (dir <= 0) ? p.left : p.right) == null) {//这儿的意思是，如果dir小于等于0，那么x肯定是p的左子节点；如果p的左子节点是空的，直接将x放到p的左子节点位置就行，如果p的左子节点不是空的，那么就得比较x和p的左子节点的大小，以便知道x应该在p的左子节点的左边还是右边。
+                            x.parent = xp;//x的父节点设置为xp
                             if (dir <= 0)
-                                xp.left = x;
+                                xp.left = x;//如果dir<=0，就将xp的左子节点设置为x
                             else
-                                xp.right = x;
-                            root = balanceInsertion(root, x);
+                                xp.right = x;//如果dir > 0,就将xp的右子节点设置为x
+                            root = balanceInsertion(root, x);//进行左旋和右旋，使红黑树平衡。
                             break;
                         }
                     }
                 }
             }
-            moveRootToFront(tab, root);
+            moveRootToFront(tab, root);//如果root节点不在数组下标处的头节点，将其调整成数组下标处的头节点。
         }
 
         /**
@@ -2362,14 +2362,14 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         /**
          * Recursive invariant check
          */
-        static <K,V> boolean checkInvariants(TreeNode<K,V> t) {
+        static <K,V> boolean checkInvariants(TreeNode<K,V> t) {//刚进入这个方法的时候，t是根节点root，后面还会递归调用这个方法，t就是其他节点了
             TreeNode<K,V> tp = t.parent, tl = t.left, tr = t.right,
-                tb = t.prev, tn = (TreeNode<K,V>)t.next;
-            if (tb != null && tb.next != t)
+                tb = t.prev, tn = (TreeNode<K,V>)t.next;//tp:根节点的父节点，tl:根节点的左子节点，tr:根节点的右子节点，tb:根节点的上一个节点，tn:根节点的下一个节点
+            if (tb != null && tb.next != t)//t点prve节点的next节点 不是t节点，肯定不对，返回false
                 return false;
-            if (tn != null && tn.prev != t)
+            if (tn != null && tn.prev != t)//t点的 next节点 的prev节点，不是t节点，也不会，返回false
                 return false;
-            if (tp != null && t != tp.left && t != tp.right)
+            if (tp != null && t != tp.left && t != tp.right)//下面就是一些基本校验
                 return false;
             if (tl != null && (tl.parent != t || tl.hash > t.hash))
                 return false;
