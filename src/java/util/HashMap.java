@@ -679,66 +679,66 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         int oldThr = threshold;//oldThr 原数组的临界值
         int newCap, newThr = 0;//newCap 新数组大小 ， 新数组临界值
         if (oldCap > 0) {//如果原数组大小 > 0
-            if (oldCap >= MAXIMUM_CAPACITY) {
-                threshold = Integer.MAX_VALUE;
-                return oldTab;
+            if (oldCap >= MAXIMUM_CAPACITY) {//原数组大小>=数组的最大容量值，此时扩容是不可能了，只能将扩容的临界值设置到最大
+                threshold = Integer.MAX_VALUE;//扩容的临界值设置为Integer.MAX_VALUE
+                return oldTab;//返回原数组
             }
-            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&//如果将新数组大小设置为老数组大小的两倍，且<最大容量，且老数组大小 >=16
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
-                newThr = oldThr << 1; // double threshold
+                newThr = oldThr << 1; //将新的扩容临界值设置为老扩容临界值的两倍
         }
-        else if (oldThr > 0) // initial capacity was placed in threshold  初始化容量设置为阈值
-            newCap = oldThr;
+        else if (oldThr > 0) // initial capacity was placed in threshold 如果老数组大小=0，且老扩容临界值 >0；出现这种情况是因为初始化容量被放入扩容临界值,参考两个参数的构造方法中的this.threshold = tableSizeFor(initialCapacity);
+            newCap = oldThr;//新数组大小赋值为老扩容临界值
         else {               // zero initial threshold signifies using defaults
-            newCap = DEFAULT_INITIAL_CAPACITY;
-            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+            newCap = DEFAULT_INITIAL_CAPACITY;//如果老数组大小<=0，且扩容的临界值也<=0；那么就将新数组大小设置为默认的初始化值16
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);//新的扩容临界值通过计算赋值，默认的加载因子 * 默认的初始化数组大小
         }
-        if (newThr == 0) {
+        if (newThr == 0) {//如果新扩容临界值等于0，通过公式新数组大小 * 负载因子计算新扩容临界值
             float ft = (float)newCap * loadFactor;
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
                       (int)ft : Integer.MAX_VALUE);
         }
-        threshold = newThr;
+        threshold = newThr;//将扩容临界值赋值为新的扩容临界值
         @SuppressWarnings({"rawtypes","unchecked"})
-            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
-        table = newTab;
-        if (oldTab != null) {
-            for (int j = 0; j < oldCap; ++j) {
+            Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];//创建一个新的数组，大小为新大小
+        table = newTab;//将数组table设置为新的数组
+        if (oldTab != null) {//如果老数组不为空，就需要将老数组中的节点转移到新数组中
+            for (int j = 0; j < oldCap; ++j) {//遍历老数组，j代表数组的下标
                 Node<K,V> e;
-                if ((e = oldTab[j]) != null) {
-                    oldTab[j] = null;
-                    if (e.next == null)
-                        newTab[e.hash & (newCap - 1)] = e;
-                    else if (e instanceof TreeNode)
-                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
-                    else { // preserve order
-                        Node<K,V> loHead = null, loTail = null;
-                        Node<K,V> hiHead = null, hiTail = null;
+                if ((e = oldTab[j]) != null) {//e是遍历到的当前节点，也就是j下标处的节点
+                    oldTab[j] = null;//将老数组中遍历到的当前位置设置为空，也就是j下标处设置为空；方便垃圾回收
+                    if (e.next == null)//如果e.next为空，说明只有一个节点
+                        newTab[e.hash & (newCap - 1)] = e;//计算这个节点在新数组中的下标位置
+                    else if (e instanceof TreeNode)//如果e是红黑树节点，
+                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);//this就是调用put方法的map实例，j就当前的下标
+                    else { // preserve order 如果是普通链表，进行hash重分布，可能在原下标位置，也可能在（原下标位置+老数组大小）位置
+                        Node<K,V> loHead = null, loTail = null;//存储原下标位置的节点
+                        Node<K,V> hiHead = null, hiTail = null;//存储（原下标位置+oldCap）的节点
                         Node<K,V> next;
                         do {
                             next = e.next;
-                            if ((e.hash & oldCap) == 0) {
+                            if ((e.hash & oldCap) == 0) {//如果e的hash值 & oldCap == 0，那么这个节点就分布在原下标位置处的链表上
                                 if (loTail == null)
-                                    loHead = e;
+                                    loHead = e;//原下标位置链表的头节点
                                 else
                                     loTail.next = e;
-                                loTail = e;
+                                loTail = e;//原下标位置链表的尾节点
                             }
-                            else {
+                            else {//否则这个节点就在（原下标位置+oldCap）位置的链表上
                                 if (hiTail == null)
-                                    hiHead = e;
+                                    hiHead = e;//设置头节点
                                 else
                                     hiTail.next = e;
-                                hiTail = e;
+                                hiTail = e;//设置尾节点
                             }
                         } while ((e = next) != null);
-                        if (loTail != null) {
-                            loTail.next = null;
-                            newTab[j] = loHead;
+                        if (loTail != null) {//如果原下标位置的链表的尾节点不为空
+                            loTail.next = null;//将尾节点的next节点设置为空
+                            newTab[j] = loHead;//j就是原下标，loHead就是原下表链表的头节点
                         }
-                        if (hiTail != null) {
-                            hiTail.next = null;
-                            newTab[j + oldCap] = hiHead;
+                        if (hiTail != null) {//hiTail是（原下标+oldCap）位置链表的尾节点
+                            hiTail.next = null;//将尾节点的next设置为空
+                            newTab[j + oldCap] = hiHead;//j+oldCap就是（原下标+olcCap）；hiHead就是（原下标+olcCap）位置链表的头节点
                         }
                     }
                 }
@@ -810,34 +810,34 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @return the node, or null if none
      */
     final Node<K,V> removeNode(int hash, Object key, Object value,
-                               boolean matchValue, boolean movable) {
+                               boolean matchValue, boolean movable) {//false，true
         Node<K,V>[] tab; Node<K,V> p; int n, index;
         if ((tab = table) != null && (n = tab.length) > 0 &&
-            (p = tab[index = (n - 1) & hash]) != null) {
+            (p = tab[index = (n - 1) & hash]) != null) {//如果数组不为空，且数组对应下标不为空。将p赋值为数组对应下标处节点
             Node<K,V> node = null, e; K k; V v;
             if (p.hash == hash &&
-                ((k = p.key) == key || (key != null && key.equals(k))))
+                ((k = p.key) == key || (key != null && key.equals(k))))//如果p的hash值key值，和入参的hash值key值相等，说明p就是要找的节点，返回p
                 node = p;
-            else if ((e = p.next) != null) {
-                if (p instanceof TreeNode)
-                    node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
-                else {
-                    do {
-                        if (e.hash == hash &&
-                            ((k = e.key) == key ||
+            else if ((e = p.next) != null) {//如果p节点不是要找的节点，且p节点右next节点，说明至少应该形成链表了，也可能是红黑树。
+                if (p instanceof TreeNode)//如果p属于TreeNode，说明已经形成了红黑树
+                    node = ((TreeNode<K,V>)p).getTreeNode(hash, key);//在红黑树中找对应的节点
+                else {//不是红黑树，肯定就是链表了
+                    do {//遍历链表
+                        if (e.hash == hash &&//上面给e赋值为p的next节点，下面e = e.next，相当于e就是遍历到的当前节点，如果e的hash值等于入参的hash值
+                            ((k = e.key) == key ||//e的key等于入参的key，说明e就要找的那个节点,将e赋值给node，结束循环
                              (key != null && key.equals(k)))) {
                             node = e;
                             break;
                         }
                         p = e;
-                    } while ((e = e.next) != null);
+                    } while ((e = e.next) != null);//循环
                 }
             }
-            if (node != null && (!matchValue || (v = node.value) == value ||
+            if (node != null && (!matchValue || (v = node.value) == value ||//如果node != null，说明找到了要删除的节点，
                                  (value != null && value.equals(v)))) {
-                if (node instanceof TreeNode)
-                    ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
-                else if (node == p)
+                if (node instanceof TreeNode)//如果node是TreeNode的实现类，说明要去红黑树中删除节点
+                    ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);//去红黑树中删除节点
+                else if (node == p)//如果
                     tab[index] = node.next;
                 else
                     p.next = node.next;
@@ -1951,19 +1951,19 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          */
         final Node<K,V> untreeify(HashMap<K,V> map) {
             Node<K,V> hd = null, tl = null;
-            for (Node<K,V> q = this; q != null; q = q.next) {
+            for (Node<K,V> q = this; q != null; q = q.next) {//this是loHead
                 Node<K,V> p = map.replacementNode(q, null);
                 if (tl == null)
                     hd = p;
                 else
-                    tl.next = p;
+                    tl.next = p;//tl
                 tl = p;
             }
             return hd;
         }
 
         /**
-         * Tree version of putVal.
+         * Tree version of putVal.1.把红黑树的根节点设为  其所在的数组槽 的第一个元素2.首先明确：TreeNode既是一个红黑树结构，也是一个双链表结构3.这个方法里做的事情，就是保证树的根节点一定也要成为链表的首节点
          */
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
@@ -2126,44 +2126,44 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * @param index the index of the table being split
          * @param bit the bit of hash to split on
          */
-        final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
-            TreeNode<K,V> b = this;
-            // Relink into lo and hi lists, preserving order
-            TreeNode<K,V> loHead = null, loTail = null;
-            TreeNode<K,V> hiHead = null, hiTail = null;
+        final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {//map实例，新数组，下标，老数组大小
+            TreeNode<K,V> b = this;//this是调用这个方法的节点，也就是红黑树的头节点
+            // Relink into lo and hi lists, preserving order 重新连接到lo和hi链表，这儿lo链表就是原下标位置的链表，hi链表就是（原下标+oldCap）位置的链表
+            TreeNode<K,V> loHead = null, loTail = null;//lo链表的头节点和尾节点
+            TreeNode<K,V> hiHead = null, hiTail = null;//hi链表的头节点和尾节点
             int lc = 0, hc = 0;
-            for (TreeNode<K,V> e = b, next; e != null; e = next) {
+            for (TreeNode<K,V> e = b, next; e != null; e = next) {//从调用此方法的节点开始，遍历整个红黑树
                 next = (TreeNode<K,V>)e.next;
                 e.next = null;
-                if ((e.hash & bit) == 0) {
+                if ((e.hash & bit) == 0) {//如果遍历到的当前节点e的hash值 & 老数组大小 计算结果为0，将整个节点放到lo链表中
                     if ((e.prev = loTail) == null)
-                        loHead = e;
+                        loHead = e;//如果lo链表的尾节点为空，说明这个链表还没有节点，将当前节点e赋值为头节点
                     else
-                        loTail.next = e;
+                        loTail.next = e;//如果lo链表尾节点不为空，将e设置为新的尾节点
                     loTail = e;
-                    ++lc;
+                    ++lc;//统计lo链表节点的个数
                 }
-                else {
-                    if ((e.prev = hiTail) == null)
-                        hiHead = e;
+                else {//如果不在lo链表中，就在hi链表中，将当前节点插入hi链表中
+                    if ((e.prev = hiTail) == null)//hi链表的尾节点如果为空，说明hi链表没有节点
+                        hiHead = e;//将当前节点设置为hi链表的头节点
                     else
-                        hiTail.next = e;
+                        hiTail.next = e;//如果hi链表有尾节点，就将当前节点设置为新的尾节点
                     hiTail = e;
-                    ++hc;
+                    ++hc;//统计hi链表节点的个数
                 }
             }
 
-            if (loHead != null) {
-                if (lc <= UNTREEIFY_THRESHOLD)
+            if (loHead != null) {//如果lo链表头节点不为空，说明，lo链表不为空
+                if (lc <= UNTREEIFY_THRESHOLD)//如果lo链表节点个数小于等于 6（转换为红黑树的阈值）
                     tab[index] = loHead.untreeify(map);
-                else {
-                    tab[index] = loHead;
+                else {//如果lo链表的节点个数大于6（转换红黑树的阈值）
+                    tab[index] = loHead;//将头节点放入数组对应下标中
                     if (hiHead != null) // (else is already treeified)
                         loHead.treeify(tab);
                 }
             }
-            if (hiHead != null) {
-                if (hc <= UNTREEIFY_THRESHOLD)
+            if (hiHead != null) {//如果hi链表头节点不为空，说明hi链表不为空
+                if (hc <= UNTREEIFY_THRESHOLD)//如果hi链表的节点个数 <= 6(转换为红黑树的阈值)
                     tab[index + bit] = hiHead.untreeify(map);
                 else {
                     tab[index + bit] = hiHead;
@@ -2214,36 +2214,36 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
         static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
                                                     TreeNode<K,V> x) {
-            x.red = true;
-            for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {
-                if ((xp = x.parent) == null) {
+            x.red = true;//新插入的节点标记为红蛇
+            for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {//xp：x节点的父节点，xpp：x节点的祖父节点，xppl：x节点的祖父节点的左子节点，xppr：新插入节点的祖父节点的右节点
+                if ((xp = x.parent) == null) {//如果x节点的父节点为null，那么说明x节点就是根节点，空树插入根节点，只需要将根节点变为黑色。
                     x.red = false;
                     return x;
                 }
-                else if (!xp.red || (xpp = xp.parent) == null)
+                else if (!xp.red || (xpp = xp.parent) == null)//如果x的父节点为黑色，不需要调整。(xpp = xp.parent) == null这其实就是一个赋值操作
                     return root;
-                if (xp == (xppl = xpp.left)) {
-                    if ((xppr = xpp.right) != null && xppr.red) {
-                        xppr.red = false;
-                        xp.red = false;
-                        xpp.red = true;
-                        x = xpp;
+                if (xp == (xppl = xpp.left)) {//如果x的父节点是红色，且是左子节点
+                    if ((xppr = xpp.right) != null && xppr.red) {//如果x的叔父节点也是红色，通过变色即可实现平衡
+                        xppr.red = false;//x的叔父节点变成黑色
+                        xp.red = false;//x的父节点变为黑色
+                        xpp.red = true;//x的祖父节点变为红色
+                        x = xpp;//将x的祖父节点赋值给x
                     }
-                    else {
-                        if (x == xp.right) {
-                            root = rotateLeft(root, x = xp);
+                    else {//如果父节点为红色左子节点，且叔父节点为黑色，则父节点左旋，祖父节点右旋
+                        if (x == xp.right) {//如果新插入的节点是右子节点，则父节点左旋
+                            root = rotateLeft(root, x = xp);//父节点左旋
                             xpp = (xp = x.parent) == null ? null : xp.parent;
                         }
                         if (xp != null) {
                             xp.red = false;
-                            if (xpp != null) {
+                            if (xpp != null) {//祖父节点不为空，祖父节点右旋
                                 xpp.red = true;
-                                root = rotateRight(root, xpp);
+                                root = rotateRight(root, xpp);//祖父节点右旋
                             }
                         }
                     }
                 }
-                else {
+                else {//父节点是红色，并且是右子节点
                     if (xppl != null && xppl.red) {
                         xppl.red = false;
                         xp.red = false;
@@ -2251,15 +2251,15 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                         x = xpp;
                     }
                     else {
-                        if (x == xp.left) {
+                        if (x == xp.left) {//插入的节点是左子节点，则父节右左旋
                             root = rotateRight(root, x = xp);
                             xpp = (xp = x.parent) == null ? null : xp.parent;
                         }
                         if (xp != null) {
                             xp.red = false;
-                            if (xpp != null) {
+                            if (xpp != null) {//祖父节点不为空，祖父节点左旋
                                 xpp.red = true;
-                                root = rotateLeft(root, xpp);
+                                root = rotateLeft(root, xpp);//祖父节点左旋
                             }
                         }
                     }
