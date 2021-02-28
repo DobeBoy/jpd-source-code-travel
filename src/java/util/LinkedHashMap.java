@@ -201,12 +201,12 @@ public class LinkedHashMap<K,V>
     /**
      * The head (eldest) of the doubly linked list.
      */
-    transient LinkedHashMap.Entry<K,V> head;
+    transient LinkedHashMap.Entry<K,V> head;//双向链表的头节点
 
     /**
      * The tail (youngest) of the doubly linked list.
      */
-    transient LinkedHashMap.Entry<K,V> tail;
+    transient LinkedHashMap.Entry<K,V> tail;//双向链表的尾节点
 
     /**
      * The iteration ordering method for this linked hash map: <tt>true</tt>
@@ -220,11 +220,11 @@ public class LinkedHashMap<K,V>
 
     // link at the end of list
     private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
-        LinkedHashMap.Entry<K,V> last = tail;
+        LinkedHashMap.Entry<K,V> last = tail;//tail是双向链表的尾节点
         tail = p;
-        if (last == null)
+        if (last == null)//如果双向链表尾节点为空，说明p的双向链表添加进来的第一个节点，即是头节点，也是尾节点
             head = p;
-        else {
+        else {//如果双向链表有尾节点，那么将新节点p设置为新的尾节点
             p.before = last;
             last.after = p;
         }
@@ -232,7 +232,7 @@ public class LinkedHashMap<K,V>
 
     // apply src's links to dst
     private void transferLinks(LinkedHashMap.Entry<K,V> src,
-                               LinkedHashMap.Entry<K,V> dst) {
+                               LinkedHashMap.Entry<K,V> dst) {//
         LinkedHashMap.Entry<K,V> b = dst.before = src.before;
         LinkedHashMap.Entry<K,V> a = dst.after = src.after;
         if (b == null)
@@ -254,8 +254,8 @@ public class LinkedHashMap<K,V>
 
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
         LinkedHashMap.Entry<K,V> p =
-            new LinkedHashMap.Entry<K,V>(hash, key, value, e);
-        linkNodeLast(p);
+            new LinkedHashMap.Entry<K,V>(hash, key, value, e);//构建一个LinkedHashMap的Entry节点
+        linkNodeLast(p);//将新节点放到双向链表尾部
         return p;
     }
 
@@ -274,9 +274,9 @@ public class LinkedHashMap<K,V>
     }
 
     TreeNode<K,V> replacementTreeNode(Node<K,V> p, Node<K,V> next) {
-        LinkedHashMap.Entry<K,V> q = (LinkedHashMap.Entry<K,V>)p;
-        TreeNode<K,V> t = new TreeNode<K,V>(q.hash, q.key, q.value, next);
-        transferLinks(q, t);
+        LinkedHashMap.Entry<K,V> q = (LinkedHashMap.Entry<K,V>)p;//将p转换为LinkedHashMap.Entry节点
+        TreeNode<K,V> t = new TreeNode<K,V>(q.hash, q.key, q.value, next);//将p转换为TreeNode节点
+        transferLinks(q, t);//TreeNode extends LinkedHashMap.Entry所以转换为TreeNode之后，也要维护after和before属性。和LinkedHashMap.Entry一致。
         return t;
     }
 

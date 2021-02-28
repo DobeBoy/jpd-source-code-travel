@@ -2,18 +2,24 @@ package jjpp.test;
 
 import sun.font.CompositeGlyphMapper;
 
+import javax.sound.midi.Soundbank;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        HashMap<Integer, Integer> map = new HashMap<>(1,1f);
-        map.put(1,null);
-        map.put(1,2);
-        System.out.println(map.get(1));
-        for (int i = 0; i < 100; i++) {
-            map.put(i,i);
+        LinkedHashMap<Integer, Integer> linkedHashMap = new LinkedHashMap<Integer,Integer>(16,0.75f,true);
+        for (int i = 0; i < 10; i++) {
+            linkedHashMap.put(i,i);
         }
-        map.remove(1)
+        linkedHashMap.get(5);
+        linkedHashMap.get(5);
+        linkedHashMap.get(6);
+        linkedHashMap.get(6);
+        Set<Map.Entry<Integer, Integer>> entries = linkedHashMap.entrySet();
+        for (Map.Entry<Integer, Integer> entry : entries) {
+            Integer value = entry.getValue();
+            System.out.println(value);
+        }
 
 
     }
