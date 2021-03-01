@@ -1,22 +1,17 @@
 package jjpp.test;
 
+import javafx.scene.input.DataFormat;
 import sun.font.CompositeGlyphMapper;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        HashMap<Integer, Integer> map = new HashMap<>(1,1f);
-        map.put(1,null);
-        map.put(1,2);
-        System.out.println(map.get(1));
-        for (int i = 0; i < 100; i++) {
-            map.put(i,i);
-        }
-        map.remove(1)
-
-
+        LinkedHashMap<Integer, Integer> linkedHashMap = new LinkedHashMap<>();
+        linkedHashMap.get(1);
     }
 
 
 }
+

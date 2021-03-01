@@ -553,7 +553,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     public V get(Object key) {
         Node<K,V> e;
-        return (e = getNode(hash(key), key)) == null ? null : e.value;//如果获取的节点位空，返回null，否则返回节点的value
+        return (e = getNode(hash(key), key)) == null ? null : e.value;//如果获取的节点为空，返回null，否则返回节点的value
     }
 
     /**
@@ -575,7 +575,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
                 do {//否则 遍历遍历链表
                     if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))//向下遍历链表，知道找到和 入参的hash值和key 相同的节点。
+                        ((k = e.key) == key || (key != null && key.equals(k))))//向下遍历链表，直到找到和 入参的hash值和key 相同的节点。
                         return e;
                 } while ((e = e.next) != null);
             }
@@ -767,7 +767,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 }
                 tl = p;//将p节点赋值给tl，用于在下一次循环中作为上一个节点进行一些链表的关联操作（p.prev = tl 和 tl.next = p）
             } while ((e = e.next) != null);
-            if ((tab[index] = hd) != null)//走到这一步，所有转换号的TreeNode还是没有树结构，但是维持着链表结构。这儿是将TreeNode新链表的头节点放到tab对应下标位置，作为根节点，构建红黑树
+            if ((tab[index] = hd) != null)//走到这一步，所有转换好的TreeNode还是没有树结构，但是维持着链表结构。这儿是将TreeNode新链表的头节点放到tab对应下标位置，作为根节点，构建红黑树
                 hd.treeify(tab);
         }
     }
@@ -794,7 +794,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *         previously associated <tt>null</tt> with <tt>key</tt>.)
      */
     public V remove(Object key) {
-        Node<K,V> e;
+        Node<K,V> e;//
         return (e = removeNode(hash(key), key, null, false, true)) == null ?
             null : e.value;
     }
@@ -818,7 +818,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))//如果p的hash值key值，和入参的hash值key值相等，说明p就是要找的节点，返回p
                 node = p;
-            else if ((e = p.next) != null) {//如果p节点不是要找的节点，且p节点右next节点，说明至少应该形成链表了，也可能是红黑树。
+            else if ((e = p.next) != null) {//如果p节点不是要找的节点，且p节点有next节点，说明至少应该形成链表了，也可能是红黑树。
                 if (p instanceof TreeNode)//如果p属于TreeNode，说明已经形成了红黑树
                     node = ((TreeNode<K,V>)p).getTreeNode(hash, key);//在红黑树中找对应的节点
                 else {//不是红黑树，肯定就是链表了
@@ -829,22 +829,22 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                             node = e;
                             break;
                         }
-                        p = e;
+                        p = e;//如果是链表，p最后就是e的上一个节点，也就是node的上一个节点
                     } while ((e = e.next) != null);//循环
                 }
             }
-            if (node != null && (!matchValue || (v = node.value) == value ||//如果node != null，说明找到了要删除的节点，
+            if (node != null && (!matchValue || (v = node.value) == value ||//如果node != null，说明找到了要删除的节点；（上面无论遍历树还是链表，只要找到要删除的节点，都会赋值给node）
                                  (value != null && value.equals(v)))) {
                 if (node instanceof TreeNode)//如果node是TreeNode的实现类，说明要去红黑树中删除节点
                     ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);//去红黑树中删除节点
-                else if (node == p)//如果
+                else if (node == p)//如果node就是数组中的一个元素，直接在数组中替换，替换为node的next节点。
                     tab[index] = node.next;
-                else
-                    p.next = node.next;
+                else//node不是树中的节点，也不是数组中的节点，那么就是链表中的节点，如果是链表中的节点，那么p就是node的上一个节点，看上面链表的那个do while循环。
+                    p.next = node.next;//链表删除一个节点，就是将他的上一个节点直接连向他的下一个节点。
                 ++modCount;
                 --size;
-                afterNodeRemoval(node);
-                return node;
+                afterNodeRemoval(node);//LinkedHashMap使用
+                return node;//返回被移除的节点
             }
         }
         return null;
@@ -1879,7 +1879,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * Calls find for root node.
          */
         final TreeNode<K,V> getTreeNode(int h, Object k) {//h就是计算出来的hash， k就是key
-            return ((parent != null) ? root() : this).find(h, k, null);//首先找到根节点，root()就是找根节点,如果当前节点parent节点为null，说明当前节点就是根节点（this就是当前节点）；然后根节点调用find()
+            return ((parent != null) ? root() : this).find(h, k, null);//首先找到根节点，root()就是找根节点,如果当前节点的parent节点为null，说明当前节点就是根节点（this就是当前节点）；然后根节点调用find()
         }
 
         /**
@@ -1942,7 +1942,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                     }
                 }
             }
-            moveRootToFront(tab, root);//如果root节点不在数组下标处的头节点，将其调整成数组下标处的头节点。
+            moveRootToFront(tab, root);//如果root节点不是数组下标处的头节点，将其调整成数组下标处的头节点。
         }
 
         /**
@@ -1952,7 +1952,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         final Node<K,V> untreeify(HashMap<K,V> map) {
             Node<K,V> hd = null, tl = null;
             for (Node<K,V> q = this; q != null; q = q.next) {//this是loHead
-                Node<K,V> p = map.replacementNode(q, null);
+                Node<K,V> p = map.replacementNode(q, null);//只是将TreeNode转换为Node
                 if (tl == null)
                     hd = p;
                 else
@@ -1981,16 +1981,16 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 else if ((kc == null &&//走到这一步说明 当前节点的hash值 和 指定key的hash值 是相等的，但key的equals不等
                           (kc = comparableClassFor(k)) == null) ||//如果kc不为空，说明key的类型实现了conparable接口
                          (dir = compareComparables(kc, k, pk)) == 0) {//用实现的conparableTo方法对 入参key 和 当前节点key进行比较
-                    if (!searched) {//走到这儿，说明key的类型没有实现conparable接口 或者 实现了conparable接口 但是 入参key和当前节点key 用conparableTo方法比较之后 返回值为0
+                    if (!searched) {//走到这儿，说明key的类型没有实现conparable接口 或者 实现了conparable接口 但是 入参key和当前节点key 用conparableTo方法比较之后 返回值为0（相等）
                         TreeNode<K,V> q, ch;//第一次符合条件的时候，会分别从左子节点和右子节点进行遍历查找，也就是用左子节点和右子节点调用find方法。
-                        searched = true;//searched标识是否已经对比过当前节点的左右子节点了，如果还没有遍历过，那么就递归遍历对比，看是否能够得到那个键对象equals相等的的节点，如果得到了键的equals相等的的节点就返回，如果还是没有键的equals相等的节点，那说明应该创建一个新节点了
+                        searched = true;//searched标识：是否已经对比过当前节点的左右子节点了，如果还没有遍历过，那么就递归遍历对比；如果找到了key相等的节点，那么就返回这个节点，如果没有找到，说明需要新建一个节点了。
                         if (((ch = p.left) != null &&
                              (q = ch.find(h, k, kc)) != null) ||
                             ((ch = p.right) != null &&
                              (q = ch.find(h, k, kc)) != null))
                             return q;
                     }
-                    dir = tieBreakOrder(k, pk);//走到这里就说明，遍历了当前节点所有子节点也没有找到和当前键equals相等的节点;定义一套规则比较入参k和p节点key的大小，看看是向左遍历还是向右遍历
+                    dir = tieBreakOrder(k, pk);//走到这里就说明，遍历了当前节点所有子节点也没有找到和当前节点的key相等的节点;定义一套规则比较入参k和p节点key的大小，确定是向左遍历还是向右遍历
                 }
 
                 TreeNode<K,V> xp = p;//xp节点是p节点的一个临时变量
@@ -2022,29 +2022,29 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * somewhere between 2 and 6 nodes, depending on tree structure).
          */
         final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
-                                  boolean movable) {
+                                  boolean movable) {//这个方法是删除红黑树中的节点，删除后还要维护数据结构，可能变成链表
             int n;
-            if (tab == null || (n = tab.length) == 0)
+            if (tab == null || (n = tab.length) == 0)//如果数组的空的，直接返回
                 return;
-            int index = (n - 1) & hash;
-            TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;
-            TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;
-            if (pred == null)
-                tab[index] = first = succ;
-            else
+            int index = (n - 1) & hash;//(数组长度 - 1) & key的hash，获取这个节点在数组中的下标
+            TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;//tab[index]就是头节点，将头节点赋值给first和root
+            TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;//将node的next节点赋值给succ节点，prev节点赋值给pred节点
+            if (pred == null)//如果pred为空，也就是node没有前置节点，那么要被移除的node节点就是头节点
+                tab[index] = first = succ;//直接将头节点和数组index下标处的值换成 node的下一个节点succ节点即可。
+            else//如果node不是头节点，先维护链表结构（形成红黑树结构后，链表结构也还存在）；在链表结构中将node节点删除，即node的上一个节点直接连接node的下一个节点，这两个节点相互连接。
                 pred.next = succ;
-            if (succ != null)
+            if (succ != null)//如果succ不为空，也就是node有next节点，那么node节点的下一个节点succ 的prev节点 设置为node节点的上一个节点 pred （这儿还是维护链表结构）
                 succ.prev = pred;
-            if (first == null)
+            if (first == null)//走到这儿如果first节点为空，导致first节点为空的代码是：tab[index] = first = succ，也就是succ为空，succ是要删除节点（node）的下一个节点。succ为空，说明node节点删除后链表没有节点了，直接返回。
                 return;
-            if (root.parent != null)
+            if (root.parent != null)//如果root节点还有父节点，将root设置为跟节点。
                 root = root.root();
-            if (root == null || root.right == null ||
+            if (root == null || root.right == null ||//通过root节点来判断此红黑树是否太小, 如果是则调用untreeify方法转为链表节点并返回
                 (rl = root.left) == null || rl.left == null) {
                 tab[index] = first.untreeify(map);  // too small
                 return;
-            }
-            TreeNode<K,V> p = this, pl = left, pr = right, replacement;
+            }//链表处理结束
+            TreeNode<K,V> p = this, pl = left, pr = right, replacement;//开始红黑树处理 关于红黑树比较复杂，单独写。
             if (pl != null && pr != null) {
                 TreeNode<K,V> s = pr, sl;
                 while ((sl = s.left) != null) // find successor
