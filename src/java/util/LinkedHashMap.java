@@ -505,7 +505,7 @@ public class LinkedHashMap<K,V>
      * @return   <tt>true</tt> if the eldest entry should be removed
      *           from the map; <tt>false</tt> if it should be retained.
      */
-    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {//重写这个方法，可以实现lru，比如大于300就删除最少使用的元素 return 300<eldest.size()
         return false;
     }
 
